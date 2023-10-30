@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    Arj (0.0.0)
+    arj (0.0.0)
       activejob (~> 7.0)
       activerecord (~> 7.0)
 
@@ -75,6 +75,7 @@ GEM
       parser (>= 3.2.1.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
+    sqlite3 (1.6.7-x86_64-darwin)
     timecop (0.9.8)
     timeout (0.4.0)
     tzinfo (2.0.6)
@@ -86,11 +87,12 @@ PLATFORMS
   x86_64-darwin-22
 
 DEPENDENCIES
-  Arj!
+  arj!
   rspec-core (~> 3.0)
   rspec-expectations (~> 3.0)
   rspec-mocks (~> 3.0)
   rubocop (~> 1.0)
+  sqlite3 (~> 1.0)
   timecop (~> 0.0)
 
 BUNDLED WITH

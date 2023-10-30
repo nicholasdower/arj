@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'active_job'
+
 module Arj
   # Base Arj job class
   class Job < ActiveJob::Base

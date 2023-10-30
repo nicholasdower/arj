@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# Creates the jobs table.
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
     create_table :jobs do |table|
