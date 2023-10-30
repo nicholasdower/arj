@@ -1,0 +1,27 @@
+name: Build, Lint & Test
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '**'
+      - '!**/*.md'
+      - '!/todo'
+      - '!/.release-notes'
+      - '!/scripts/release'
+      - '!/LICENSE.txt'
+      - '!/.github/dependabot.yml'
+      - '!/.github/workflows/release.yml'
+
+jobs:
+  test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+      - run: bundle install
+      - run: bundle exec rubocop
+      - run: bundle exec rspec

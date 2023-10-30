@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        type: choice
+        description: 'Release Type'
+        options:
+          - patch
+          - minor
+          - major
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+      - name: Release
+        env:
+          RELEASE_TYPE: ${{ inputs.type }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: ./scripts/release

@@ -1,0 +1,122 @@
+#!/bin/bash
+
+set -e -u -o pipefail
+
+if [ -z ${RELEASE_TYPE+x} ]; then
+  echo 'fatal: you must set RELEASE_TYPE'
+  exit 1
+fi
+
+if [ -z ${GITHUB_TOKEN+x} ]; then
+  echo 'fatal: you must set GITHUB_TOKEN'
+  exit 1
+fi
+
+if [ -z ${RUBYGEMS_API_KEY+x} ]; then
+  echo 'fatal: you must set RUBYGEMS_API_KEY'
+  exit 1
+fi
+
+if [ `git branch --show-current` != 'master' ]; then
+  echo 'fatal: not on master branch' >&2
+  exit 1
+fi
+
+git fetch
+
+if [ `git rev-parse origin/master` != `git rev-parse master` ]; then
+  echo 'fatal: master and origin/master differ' >&2
+  exit 1
+fi
+
+old_version=$(cat .release-version)
+major_version=$(cat .release-version | cut -d. -f1)
+minor_version=$(cat .release-version | cut -d. -f2)
+patch_version=$(cat .release-version | cut -d. -f3)
+
+if [ "$RELEASE_TYPE" = "patch" ]; then
+  patch_version=$((patch_version + 1))
+elif [ "$RELEASE_TYPE" = "minor" ]; then
+  minor_version=$((minor_version + 1))
+  patch_version=0
+elif [ "$RELEASE_TYPE" = "major" ]; then
+  major_version=$((major_version + 1))
+  minor_version=0
+  patch_version=0
+else
+  echo "fatal: invalid RELEASE_TYPE: \"$RELEASE_TYPE\"" >&2
+  exit 1
+fi
+
+new_version="$major_version.$minor_version.$patch_version"
+notes=$(cat .release-notes)
+single_line_notes=$(cat .release-notes | sed 's/$/\\r\\n/g' | tr -d '\n');
+gem_file=arj-$new_version.gem
+
+echo "Old version: v$old_version"
+echo "New version: v$new_version"
+echo "Gem file: $gem_file"
+echo "Notes:"
+cat .release-notes
+echo
+
+echo "Updating .release-version"
+echo $new_version > .release-version
+
+echo "Updating CHANGELOG.md"
+echo "## $new_version" >> CHANGELOG.md.new
+echo >> CHANGELOG.md.new
+cat .release-notes >> CHANGELOG.md.new
+echo >> CHANGELOG.md.new
+cat CHANGELOG.md >> CHANGELOG.md.new
+mv CHANGELOG.md.new CHANGELOG.md
+
+echo "Updating .release-notes"
+echo "- No changes." > .release-notes
+
+echo "Building"
+bundle install
+
+echo "Building gem"
+rm -rf $gem_file
+gem build
+if [ ! -f $gem_file ]; then
+  echo 'Gem file not found' >&2
+  exit 1
+fi
+
+git config user.email "nicholasdower@gmail.com"
+git config user.name "arj-ci"
+
+echo "Committing changes and tagging."
+echo -e "v$new_version release\n\nFeatures & Bug Fixes\n$notes" | git commit -a -F -
+git tag v$new_version
+
+echo 'Pushing release commit and tag'
+git push
+git push origin v$new_version
+target_commit=$(git rev-parse HEAD)
+echo "Target commit: $target_commit"
+
+echo "Pushing gem"
+export GEM_HOST_API_KEY=$RUBYGEMS_API_KEY
+gem push $gem_file
+
+echo 'Creating GitHub release'
+release_id=$(curl \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
+  "https://api.github.com/repos/nicholasdower/arj/releases" \
+  -d "{\"tag_name\":\"v$new_version\",\"target_commitish\":\"$target_commit\",\"name\":\"v$new_version Release\",\"body\":\"$single_line_notes\",\"draft\":false,\"prerelease\":false,\"generate_release_notes\":false}" | tr -d '\n' | grep -E -o '"id": *[0-9]+' | head -n 1 | sed 's/"id": *//g')
+
+echo 'Uploading release asset'
+curl \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -H "Content-Type: application/x-tar" \
+  "https://uploads.github.com/repos/nicholasdower/arj/releases/$release_id/assets?name=$gem_file" \
+  --data-binary @"$gem_file" > /dev/null
+
+echo "Version v$new_version successfully released"
