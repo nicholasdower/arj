@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'active_record'
+
 module Arj
   # Wrapper for ActiveRecord relations which maps record objects to Arj::Job objects.
   class Relation

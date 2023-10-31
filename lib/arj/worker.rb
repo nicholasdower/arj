@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require 'active_job'
 require 'logger'
+require_relative '../arj.rb'
 
 module Arj
   # A worker which performs jobs.

@@ -2,11 +2,9 @@
 
 require 'active_job'
 require 'active_record'
-require_relative '../lib/arj'
-require_relative '../lib/arj_adapter'
-require_relative 'support/db'
-require_relative 'support/job'
-require_relative 'support/test_job'
+
+Dir.glob('lib/**/*.rb').each { |f| require "./#{f}" }
+Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
 
 ActiveRecord::Base.logger = Logger.new($stderr)
 ActiveJob::Base.queue_adapter = :arj
@@ -17,7 +15,11 @@ RSpec.configure do |config|
   config.formatter = :documentation
 
   config.before(:suite) do
-    Db.recreate
+    Db.create
+  end
+
+  config.before(:suite) do
+    Db.destroy
   end
 
   config.before do

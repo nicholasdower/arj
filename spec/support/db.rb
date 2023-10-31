@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'active_record'
+require 'fileutils'
 require 'sqlite3'
 require 'yaml'
 require_relative '../../db/migrate/20231030232800_create_jobs'
@@ -11,8 +12,13 @@ class Db
     Job.destroy_all
   end
 
-  def self.recreate
-    ActiveRecord::Base.establish_connection(YAML.load(File.open('database.yml')))
+  def self.destroy
+    Dir.glob('db/.test.db*').each { |f| FileUtils.rm(f) }
+  end
+
+  def self.create
+    destroy
+    ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'db/.test.db')
 
     ActiveRecord::Base.connection.drop_table(:jobs) if ActiveRecord::Base.connection.table_exists?(:jobs)
     CreateJobs.migrate(:up)

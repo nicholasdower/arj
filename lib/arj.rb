@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+require_relative 'arj_adapter.rb'
+require_relative 'arj/job.rb'
+require_relative 'arj/relation.rb'
+require_relative 'arj/worker.rb'
+require_relative 'version.rb'
+
 # Arj helper methods
 module Arj
   def self.model_class_name=(name)

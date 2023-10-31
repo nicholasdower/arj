@@ -21,5 +21,7 @@ class TestJob < Arj::Job
   def perform(*args, **kwargs)
     ActiveJob::Base.logger.info "Arj::TestJob#perform #{job_id} - args: #{args}, kwargs: #{kwargs}"
     raise StandardError, kwargs[:error] if kwargs[:error]
+
+    arguments
   end
 end
