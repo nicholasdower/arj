@@ -2,7 +2,7 @@
 
 require 'active_job'
 require 'logger'
-require_relative '../arj.rb'
+require_relative '../arj'
 
 module Arj
   # A worker which performs jobs.
@@ -40,7 +40,7 @@ module Arj
 
     def next_job
       @logger.info("Arj::Worker(#{@queue_name || '*'}) - Looking for the next available job")
-      Arj.next(queue_name: @queue_name, max_executions: @max_executions)
+      Arj::Base.next_job(queue_name: @queue_name, max_executions: @max_executions)
     end
   end
 end

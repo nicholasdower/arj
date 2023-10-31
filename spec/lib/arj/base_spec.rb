@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
 require_relative '../../spec_helper'
-require_relative '../../../lib/arj/job'
 
-describe Arj::Job do
+describe Arj::Base do
   context '.perform_later' do
     subject { TestJob.perform_later(1) }
 

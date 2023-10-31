@@ -3,12 +3,10 @@
 require 'active_record'
 
 require_relative 'job'
-require_relative '../../lib/arj/job'
+require_relative '../../lib/arj/base'
 
 # Arj job for use in tests.
-class TestJob < Arj::Job
-  self.arj_record_class = Job
-
+class TestJob < Arj::Base
   rescue_from(Exception) do |_error|
     retry_job
   end

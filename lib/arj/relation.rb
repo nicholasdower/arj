@@ -16,14 +16,14 @@ module Arj
         Relation.new(result)
       when Array
         result.map do |item|
-          if item.is_a?(Arj.model_class)
-            Arj.from(item)
+          if item.is_a?(Arj::Base.record_class)
+            item.job_class.constantize.from_record(item)
           else
             item
           end
         end
-      when Arj.model_class
-        Arj.from(result)
+      when Arj::Base.record_class
+        result.job_class.constantize.from_record(result)
       else
         result
       end
@@ -31,10 +31,6 @@ module Arj
 
     def respond_to_missing?(name, include_private)
       respond_to?(name, include_private)
-    end
-
-    def pretty_print(pp)
-      pp.pp(to_a)
     end
   end
 end
