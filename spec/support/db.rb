@@ -4,7 +4,7 @@ require 'active_record'
 require 'fileutils'
 require 'sqlite3'
 require 'yaml'
-require_relative '../../db/migrate/20231030232800_create_jobs'
+require_relative '../../db/create_jobs'
 require_relative 'job'
 
 class Db
