@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'pry'
+require_relative 'init'
+
+begin
+  Db.instance.create
+  Pry.start
+ensure
+  Db.instance.destroy
+end

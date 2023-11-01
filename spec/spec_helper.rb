@@ -2,26 +2,26 @@
 
 require 'active_job'
 require 'active_record'
-
-Dir.glob('lib/**/*.rb').each { |f| require "./#{f}" }
-Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
-
-ActiveRecord::Base.logger = Logger.new($stderr)
-ActiveJob::Base.queue_adapter = :arj
-Time.zone = 'UTC'
+require 'timecop'
+require_relative '../script/init'
 
 RSpec.configure do |config|
   config.formatter = :documentation
 
   config.before(:suite) do
-    Db.create
+    Db.instance.create
   end
 
-  config.before(:suite) do
-    Db.destroy
+  config.after(:suite) do
+    Db.instance.destroy
   end
 
   config.before do
-    Db.reset
+    Db.instance.reset
+    Timecop.freeze
+  end
+
+  config.after do
+    Timecop.return
   end
 end

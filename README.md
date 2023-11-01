@@ -2,7 +2,10 @@
 
 An ActiveJob queuing backend which uses ActiveRecord. 
 
-For more information on ActiveJob, see https://edgeguides.rubyonrails.org/active_job_basics.html
+For more information on ActiveJob, see:
+
+- https://edgeguides.rubyonrails.org/active_job_basics.html
+- https://www.rubydoc.info/gems/activejob
 
 ## Setup
 
@@ -51,13 +54,12 @@ Optionally, create a class named `ApplicationJob` which extends from `Arj::Base`
 ```ruby
 require 'arj'
 
-class ApplicationJob < Arj::Base
-end
+class ApplicationJob < Arj::Base; end
 ```
 
 ## Usage
 
-Create a job class with a perform method which accepts the arguments you want to pass to your job:
+Create a job class with a perform method. Specify the arguments required for your job:
 
 ```ruby
 require 'arj'
@@ -92,7 +94,7 @@ job_two = SampleJob.perform_later(error: 'failed')
 job_two.perform_now
 ```
 
-Retrieve jobs (most ActiveRecord query methods are supported):
+Retrieve jobs (many `ActiveRecord` query methods are supported):
 
 ```ruby
 SampleJob.all                      # SampleJobs
@@ -115,7 +117,18 @@ Arj::Worker.new.start
 
 ## Extension Examples
 
-Use the following examples if you would like to add a column to the jobs table.
+### Custom retry scheduling
+
+Override `ApplicationJob#retry_job`:
+
+```ruby
+class ApplicationJob < Arj::Base
+  def retry_job(options = {})
+    options[:wait] = 5 + (executions**4) unless options[:wait] || options[:wait_until]
+    super
+  end
+end
+```
 
 ### Adding a shard column
 
@@ -129,7 +142,45 @@ class AddShardToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Override `ApplicationJob#set`:
+Override `#set`, `#serialize` and `#deserialize_record`:
+
+```ruby
+class ApplicationJob < Arj::Base
+  attr_accessor :shard
+
+  def set(options = {})
+    super.tap { @shard = options[:shard] if options.key?(:shard) }
+  end
+
+  def serialize
+    super.merge('shard' => @shard)
+  end
+
+  def deserialize_record(record)
+    super.tap { @shard = record.shard }
+  end
+end
+```
+
+Enqueue a job with a shard:
+
+```ruby
+SampleJob.set(shard: 22).perform_later(arg: 'foo')
+```
+
+### Adding a last error column
+
+Apply a migration:
+
+```ruby
+class AddShardToJobs < ActiveRecord::Migration[7.1]
+  def change
+    add_column :jobs, :last_error, :text
+  end
+end
+```
+
+Override `#rescue_from`, `#serialize` and `#deserialize_record`:
 
 ```ruby
 class ApplicationJob < Arj::Base
@@ -159,44 +210,6 @@ class ApplicationJob < Arj::Base
 
   def deserialize_record(record)
     super.tap { @last_error = record.last_error }
-  end
-end
-```
-
-Enqueue a job with a shard:
-
-```ruby
-SampleJob.set(shard: 22).perform_later(arg: 'foo')
-```
-
-### Adding a last error column
-
-Apply a migration:
-
-```ruby
-class AddShardToJobs < ActiveRecord::Migration[7.1]
-  def change
-    add_column :jobs, :last_error, :text
-  end
-end
-```
-
-Override `ApplicationJob#set`:
-
-```ruby
-class ApplicationJob < Arj::Base
-  attr_accessor :shard
-
-  def set(options = {})
-    super.tap { @shard = options[:shard] if options.key?(:shard) }
-  end
-
-  def serialize
-    super.merge('shard' => @shard)
-  end
-
-  def deserialize_record(record)
-    super.tap { @shard = record.shard }
   end
 end
 ```

@@ -6,8 +6,11 @@ require 'yaml'
 module Arj
   # Base Arj job class
   class Base < ActiveJob::Base
-    RECORD_FIELDS = %w[job_class job_id queue_name priority arguments executions exception_executions locale timezone
-                       enqueued_at scheduled_at].freeze
+    RECORD_FIELDS = %w[
+      job_class job_id job_provider_id queue_name
+      priority arguments executions exception_executions
+      locale timezone enqueued_at scheduled_at
+    ].freeze
 
     attr_reader :record
 
@@ -65,7 +68,7 @@ module Arj
       if @record
         save_record!
       else
-        @record = Arj::Base.record_class.create!(serialize)
+        deserialize_record(Arj::Base.record_class.create!(serialize))
       end
       @record_enqueued = true
       self
@@ -116,6 +119,9 @@ module Arj
       job_data['scheduled_at'] = @record.scheduled_at&.iso8601
 
       deserialize(job_data)
+
+      # TODO: this method is private
+      deserialize_arguments_if_needed
 
       self
     end
