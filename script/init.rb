@@ -29,7 +29,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.integer  :priority
       table.text     :arguments,            null: false
       table.integer  :executions,           null: false
-      table.text     :exception_executions
+      table.text     :exception_executions, null: false
       table.string   :locale,               null: false
       table.string   :timezone,             null: false
       table.datetime :enqueued_at,          null: false
@@ -45,11 +45,9 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 
 class Db
-  include Singleton
-
   FILE = '.test.db'
 
-  def create
+  def self.create
     raise 'connection already established' if @connected
 
     destroy
@@ -58,12 +56,17 @@ class Db
     CreateJobs.migrate(:up)
   end
 
-  def destroy
+  def self.destroy
     Dir.glob("#{FILE}*").each { |file| File.delete(file)}
     @connected = false
   end
 
-  def reset
+  def self.recreate
+    destroy
+    create
+  end
+
+  def self.clear
     raise 'connection not established' unless @connected
 
     Job.destroy_all

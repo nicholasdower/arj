@@ -9,15 +9,15 @@ RSpec.configure do |config|
   config.formatter = :documentation
 
   config.before(:suite) do
-    Db.instance.create
+    Db.create
   end
 
   config.after(:suite) do
-    Db.instance.destroy
+    Db.destroy
   end
 
   config.before do
-    Db.instance.reset
+    Db.clear
     Timecop.freeze
   end
 

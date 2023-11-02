@@ -10,6 +10,13 @@ module Arj
     attr_reader :queue_name, :max_executions, :sleep_delay
     attr_accessor :logger
 
+    def self.next_job(queue_name: nil, max_executions: nil)
+      relation = Arj::Base.where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
+      relation = relation.where(queue_name:) if queue_name
+      relation = relation.where('executions < ?', max_executions) if max_executions
+      relation.order(priority: :asc, scheduled_at: :asc).first
+    end
+
     def initialize(queue_name: nil, max_executions: nil, sleep_delay: 5, logger: ActiveJob::Base.logger)
       @queue_name = queue_name
       @max_executions = max_executions
@@ -40,7 +47,7 @@ module Arj
 
     def next_job
       @logger.info("Arj::Worker(#{@queue_name || '*'}) - Looking for the next available job")
-      Arj::Base.next_job(queue_name: @queue_name, max_executions: @max_executions)
+      Arj::Worker.next_job(queue_name: @queue_name, max_executions: @max_executions)
     end
   end
 end

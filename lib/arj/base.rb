@@ -6,10 +6,14 @@ require 'yaml'
 module Arj
   # Base Arj job class
   class Base < ActiveJob::Base
-    RECORD_FIELDS = %w[
-      job_class job_id job_provider_id queue_name
+    REQUIRED_JOB_ATTRIBUTES = %w[
+      job_class job_id provider_job_id queue_name
       priority arguments executions exception_executions
       locale timezone enqueued_at scheduled_at
+    ].freeze
+    REQUIRED_RECORD_ATTRIBUTES = %w[
+      job_class job_id queue_name priority arguments executions
+      exception_executions locale timezone enqueued_at scheduled_at
     ].freeze
 
     attr_reader :record
@@ -48,13 +52,6 @@ module Arj
 
         job.deserialize_record(record)
       end
-
-      def next_job(queue_name: nil, max_executions: nil)
-        relation = where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
-        relation = relation.where(queue_name:) if queue_name
-        relation = relation.where('executions < ?', max_executions) if max_executions
-        relation.order(priority: :asc, scheduled_at: :asc).first
-      end
     end
 
     def initialize(...)
@@ -63,7 +60,7 @@ module Arj
       @record = nil
     end
 
-    def arj_enqueue!(timestamp = nil)
+    def enqueue_record!(timestamp = nil)
       self.scheduled_at = timestamp ? Time.zone.at(timestamp) : nil
       if @record
         save_record!
@@ -83,6 +80,12 @@ module Arj
       self
     end
 
+    def update_record!(...)
+      @record.update!(...)
+      deserialize_record
+      self
+    end
+
     def destroy_record!
       @record.destroy!
       self
@@ -98,29 +101,28 @@ module Arj
     end
 
     def serialize
-      serialized = super.slice(*RECORD_FIELDS)
+      super.fetch_values(*REQUIRED_JOB_ATTRIBUTES)
+      serialized = super.slice(*REQUIRED_JOB_ATTRIBUTES).tap { |h| h.delete('provider_job_id') }
       serialized['arguments'] = serialized['arguments'].to_json
       serialized['exception_executions'] = serialized['exception_executions'].to_json
 
       serialized
     end
 
-    def deserialize_record(record)
-      raise "record already set: #{@record.id}" if @record
-
+    def deserialize_record(record = @record)
       @record = record
       @record_enqueued = true
 
-      job_data = @record.attributes.slice(*RECORD_FIELDS)
+      @record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
+      job_data = @record.attributes.slice(*REQUIRED_RECORD_ATTRIBUTES)
+      job_data['provider_job_id'] = @record.id
       job_data['arguments'] = JSON.parse(job_data['arguments'])
       job_data['exception_executions'] = JSON.parse(job_data['exception_executions'])
-      job_data['provider_job_id'] = @record.id
       job_data['enqueued_at'] = @record.enqueued_at.iso8601
-      job_data['scheduled_at'] = @record.scheduled_at&.iso8601
+      job_data['scheduled_at'] = @record.scheduled_at&.iso8601 if job_data['scheduled_at']
 
       deserialize(job_data)
 
-      # TODO: this method is private
       deserialize_arguments_if_needed
 
       self

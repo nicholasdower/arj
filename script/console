@@ -4,9 +4,47 @@
 require 'pry'
 require_relative 'init'
 
+# Reload all source files.
+class ReloadCommand < Pry::ClassCommand
+  match 'reload'
+  group 'Arj'
+  description 'Reload all source files.'
+
+  banner <<-BANNER
+    Reload all source files.
+  BANNER
+
+  command_options(keep_retval: false)
+
+  def process
+    Dir.glob('lib/**/*.rb').each { |f| load "./#{f}" }
+  end
+end
+Pry::Commands.add_command(ReloadCommand)
+
+# Set the ActiveRecord and ActiveJob log level.
+class LevelCommand < Pry::ClassCommand
+  match 'level'
+  group 'Arj'
+  description 'Set the ActiveRecord and ActiveJob log level.'
+
+  banner <<-BANNER
+    Set the ActiveRecord and ActiveJob log level.
+  BANNER
+
+  def process(level)
+    level = Integer(level) if %w[0 1 2 3 4 5].include?(level)
+
+    ActiveRecord::Base.logger.level = level if level
+    ActiveJob::Base.logger.level = level if level
+    ActiveJob::Base.logger.level
+  end
+end
+Pry::Commands.add_command(LevelCommand)
+
 begin
-  Db.instance.create
+  Db.create
   Pry.start
 ensure
-  Db.instance.destroy
+  Db.destroy
 end

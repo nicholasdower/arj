@@ -10,6 +10,7 @@ on:
       - '!/todo'
       - '!/.release-notes'
       - '!/scripts/release'
+      - '!/scripts/console'
       - '!/LICENSE.txt'
       - '!/.github/dependabot.yml'
       - '!/.github/workflows/release.yml'

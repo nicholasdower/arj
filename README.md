@@ -33,7 +33,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.integer  :priority
       table.text     :arguments,            null: false
       table.integer  :executions,           null: false
-      table.text     :exception_executions
+      table.text     :exception_executions, null: false
       table.string   :locale,               null: false
       table.string   :timezone,             null: false
       table.datetime :enqueued_at,          null: false
