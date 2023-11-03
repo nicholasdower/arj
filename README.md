@@ -77,8 +77,10 @@ ActiveJob::Base.queue_adapter = :arj
 The `Arj` module exposes ActiveRecord query methods which can be used to find jobs. For example:
 
 ```ruby
-Arj.all                            # All jobs
-Arj.where(queue_name: 'foo')       # Jobs in the foo queue
+Arj.count                    # Number of jobs.
+Arj.all                      # All jobs
+Arj.last                     # Last job by database id
+Arj.where(queue_name: 'foo') # Jobs in the foo queue
 ```
 
 Optionally, query methods can also be added to job classes:
@@ -115,6 +117,12 @@ Start a worker which will run jobs as they become available:
 
 ```ruby
 Arj::Worker.new.start
+```
+
+Start a job with custom criteria:
+
+```ruby
+Arj::Worker.new(description: 'Arj::Worker(first)', source: -> { Arj.first }).start
 ```
 
 ## Customization Examples

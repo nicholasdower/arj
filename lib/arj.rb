@@ -28,5 +28,12 @@ module Arj
 
       @record_class
     end
+
+    def next(queue_name: nil, max_executions: nil)
+      relation = Arj.where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
+      relation = relation.where(queue_name:) if queue_name
+      relation = relation.where('executions < ?', max_executions) if max_executions
+      relation.order(priority: :asc, scheduled_at: :asc).first
+    end
   end
 end
