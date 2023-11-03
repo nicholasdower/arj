@@ -3,3 +3,4 @@
 /*.gem
 .DS_Store
 /.test.db*
+/coverage

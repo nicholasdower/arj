@@ -6,6 +6,7 @@ help:
 	@echo '  console:   Start an interactive console'
 	@echo '  rubocop:   Run rubocop'
 	@echo '  rspec:     Run all specs'
+	@echo '  coverage:  Run all specs with coverage'
 	@echo '  precommit: Run lint and specs'
 
 .PHONY: console
@@ -15,6 +16,10 @@ console:
 .PHONY: rspec
 rspec:
 	@rspec
+
+.PHONY: coverage
+coverage:
+	@COVERAGE=1 rspec
 
 .PHONY: rubocop
 rubocop:

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-require 'simplecov'
-SimpleCov.start
+if ENV['COVERAGE'] == '1'
+  require 'simplecov'
+  SimpleCov.start
+end
 
 require 'active_job'
 require 'active_record'
