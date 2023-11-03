@@ -7,6 +7,15 @@ For more information on ActiveJob, see:
 - https://edgeguides.rubyonrails.org/active_job_basics.html
 - https://www.rubydoc.info/gems/activejob
 
+- [Setup](#setup)
+- [Querying](#querying)
+- [Persistence](#persistence)
+- [Worker](#worker)
+- [Customization Examples](#customization-examples)
+  * [Adding a shard column](#adding-a-shard-column)
+  * [Adding a last error column](#adding-a-last-error-column)
+- [Testing](#testing)
+
 ## Setup
 
 Add the following to your Gemfile:
@@ -65,29 +74,31 @@ ActiveJob::Base.queue_adapter = :arj
 
 ## Querying
 
-The `Arj` module provides ActiveRecord-like query methods which can be used to find jobs:
+The `Arj` module exposes ActiveRecord query methods which can be used to find jobs. For example:
 
 ```ruby
 Arj.all                            # All jobs
-Arj::TestJob.all                   # All Arj::TestJobs (must include QueryMethods)
-
 Arj.where(queue_name: 'foo')       # Jobs in the foo queue
 ```
 
-Optionally, these query methods can also be added to job classes:
+Optionally, query methods can also be added to job classes:
 
 ```ruby
-class ApplicationJob < ActiveJob::Base
+class SampleJob < ActiveJob::Base
   include Arj::QueryMethods
 end
 ```
 
+```ruby
+SampleJob.all                   # All SampleJobs
+```
+
 ## Persistence
 
-Optionally, ActiveRecord-like persistence methods (`save!`, `destroy!`, `update!`) can be added to job classes:
+Optionally, persistence methods `reload`, `save!`, `destroy!`, `update!` and `update_job!` can be added to job classes:
 
 ```ruby
-class ApplicationJob < ActiveJob::Base
+class SampleJob < ActiveJob::Base
   include Arj::Persistence
 end
 ```
@@ -108,19 +119,6 @@ Arj::Worker.new.start
 
 ## Customization Examples
 
-### Custom retry scheduling
-
-Override `ApplicationJob#retry_job`:
-
-```ruby
-class ApplicationJob < ActiveJob::Base
-  def retry_job(options = {})
-    options[:wait] = 5 + (executions**4) unless options[:wait] || options[:wait_until]
-    super
-  end
-end
-```
-
 ### Adding a shard column
 
 Apply a migration:
@@ -136,7 +134,7 @@ end
 Override `#set`, `#serialize` and `#deserialize`:
 
 ```ruby
-class ApplicationJob < ActiveJob::Base
+class SampleJob < ActiveJob::Base
   attr_accessor :shard
 
   def set(options = {})
@@ -174,7 +172,7 @@ end
 Configure retries and override `#serialize` and `#deserialize`:
 
 ```ruby
-class ApplicationJob < ActiveJob::Base
+class SampleJob < ActiveJob::Base
   attr_accessor :last_error
 
   retry_on Exception
@@ -197,4 +195,24 @@ class ApplicationJob < ActiveJob::Base
     super.tap { @last_error = record.last_error }
   end
 end
+```
+
+## Testing
+
+The following sample jobs are provided for use in tests:
+
+- `TestJob`
+- `TestJobWithPersistence`
+- `TestJobWithQuery`
+- `TestJobWithRetry`
+
+To test job failures:
+
+```ruby
+Arj::TestJobWithRetry.perform_later(error: StandardError)
+```
+
+To test retries:
+```ruby
+Arj::TestJobWithRetry.perform_later(error: Arj::TestJobWithRetry::Error)
 ```

@@ -6,15 +6,15 @@ require_relative 'relation'
 module Arj
   module QueryMethods
     module ClassMethods
-      delegate :all, :where, :count, :first, :last, :sole, :take, :pluck, :destroy_all, :destroy, to: :record_relation
+      delegate(*ActiveRecord::Querying::QUERYING_METHODS, to: :all)
 
-      def record_relation
+      def all
         raise 'no record class configured' unless Arj.record_class
 
         if self == Arj || name == 'ApplicationJob'
-          Relation.new(Arj.record_class)
+          Relation.new(Arj.record_class.all)
         else
-          Relation.new(Arj.record_class.where(job_class: name))
+          Relation.new(Arj.record_class.where(job_class: name).all)
         end
       end
     end

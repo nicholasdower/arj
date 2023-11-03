@@ -33,14 +33,18 @@ module Arj
       end
     end
 
-    def respond_to_missing?(name, include_private)
-      respond_to?(name, include_private)
+    def respond_to_missing?(_)
+      true
     end
 
-    def update!(attributes)
+    def update_job!(attributes)
       to_a.map do |job|
         job.update!(attributes)
       end
+    end
+
+    def pretty_print(pp)
+      pp.pp(to_a)
     end
   end
 end

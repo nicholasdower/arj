@@ -2,19 +2,28 @@
 
 require 'active_job/base'
 require_relative 'persistence'
+require_relative 'query_methods'
 
 module Arj
-  # An Arj job for use during testing and development.
   class TestJob < ActiveJob::Base
-    include Persistence
-    include QueryMethods
-
-    retry_on Exception
-
     def perform(*args, **kwargs) # rubocop:disable Lint/UnusedMethodArgument
-      raise StandardError, kwargs[:error] if kwargs[:error]
+      raise(kwargs[:error], 'error') if kwargs[:error]
 
       arguments
     end
+  end
+
+  class TestJobWithPersistence < TestJob
+    include Persistence
+  end
+
+  class TestJobWithQuery < TestJob
+    include QueryMethods
+  end
+
+  class TestJobWithRetry < TestJob
+    class Error < StandardError; end
+
+    retry_on Error, wait: 1.minute, attempts: 3
   end
 end

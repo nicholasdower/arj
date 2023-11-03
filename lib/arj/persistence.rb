@@ -2,6 +2,7 @@
 
 require 'active_job'
 require 'active_job/arguments'
+require 'active_record'
 require 'json'
 require_relative '../arj'
 
@@ -20,7 +21,6 @@ module Arj
     class << self
       def enqueue_record(job, timestamp = nil)
         job.scheduled_at = timestamp ? Time.zone.at(timestamp) : nil
-        job.instance_variable_set(:@_arj_enqueued, true)
 
         if job.provider_job_id
           record = Arj.record_class.find(job.provider_job_id)
@@ -87,12 +87,19 @@ module Arj
       end
     end
 
-    def record
-      Arj.record_class.find(provider_job_id)
+    def reload
+      record = Arj.record_class.find(provider_job_id)
+      Persistence.from_record(record, self)
+      self
+    rescue ActiveRecord::RecordNotFound
+      self.successfully_enqueued = false
+      raise
     end
 
     def save!
+      record = Arj.record_class.find(provider_job_id)
       record.update!(Persistence.serialize(self))
+      Persistence.from_record(record, self)
       self
     end
 
@@ -107,7 +114,9 @@ module Arj
     end
 
     def destroy!
+      record = Arj.record_class.find(provider_job_id)
       record.destroy!
+      self.successfully_enqueued = false
       self
     end
   end

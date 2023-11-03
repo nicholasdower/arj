@@ -9,6 +9,8 @@ ENV['LEVEL'] ||= Logger::WARN.to_s
 
 require_relative '../script/init'
 
+Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
+
 RSpec.configure do |config|
   config.formatter = :documentation
 
