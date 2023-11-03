@@ -1,28 +1,20 @@
 # Contributing
 
-## Setup
+Install Ruby 3.2.2, then run `make help`:
 
-1. Install Ruby 3.2.2.
-
-## Run specs
-
-```shell
-make rspec
 ```
+     _             _
+    / \     _ __  (_)
+   / _ \   | '__| | |
+  / ___ \  | |    | |
+ /_/   \_\ |_|   _/ |
+                |__/
+Arj, An ActiveJob queuing backend which uses ActiveRecord.
 
-## Run rubocop
-
-```shell
-make rubocop
-```
-
-## Start an interactive console
-
-```shell
-make console
-> Arj::TestJob.perform_later
-> Arj::TestJob.set(wait: 5.minutes).perform_later
-> Arj::TestJobWithRetry.perform_later(error: Arj::RetryError)
-> Arj.next.perform_now
-> reset
+Targets:
+  console:   Start an interactive console
+  rubocop:   Run rubocop
+  rspec:     Run all specs
+  coverage:  Run all specs with coverage
+  precommit: Run lint and specs
 ```
