@@ -1,4 +1,4 @@
-# Arj (Active Record Job)
+# Arj
 
 An ActiveJob queuing backend which uses ActiveRecord. 
 
@@ -49,59 +49,50 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Optionally, create a class named `ApplicationJob` which extends from `Arj::Base`:
+If using Rails, configure the queue adapter:
 
 ```ruby
-require 'arj'
-
-class ApplicationJob < Arj::Base; end
-```
-
-## Usage
-
-Create a job class with a perform method. Specify the arguments required for your job:
-
-```ruby
-require 'arj'
-
-class SampleJob < ApplicationJob
-  def perform(arg: nil, error: nil)
-    ActiveJob::Base.logger.info "SampleJob#perform #{job_id} - arg: #{arg}, error: #{error}"
-    raise StandardError.new(error) if error
-
-    arguments
-  end
+class MyApplication < Rails::Application
+  config.active_job.queue_adapter = :arj
 end
 ```
 
-Enqueue and run a job which will succeed:
+If not using Rails, configure the queue adapter:
 
 ```ruby
-job_one = SampleJob.perform_later(arg: 'foo')
-job_one.perform_now
+ActiveJob::Base.queue_adapter = :arj
 ```
 
-Enqueue a job in the future:
+## Querying
+
+The `Arj` module provides ActiveRecord-like query methods which can be used to find jobs:
 
 ```ruby
-job_one = SampleJob.set(wait: 10.seconds).perform_later(arg: 'foo')
+Arj.all                            # All jobs
+Arj::TestJob.all                   # All Arj::TestJobs (must include QueryMethods)
+
+Arj.where(queue_name: 'foo')       # Jobs in the foo queue
 ```
 
-Enqueue and run a job which will fail:
+Optionally, these query methods can also be added to job classes:
 
 ```ruby
-job_two = SampleJob.perform_later(error: 'failed')
-job_two.perform_now
+class ApplicationJob < ActiveJob::Base
+  include Arj::QueryMethods
+end
 ```
 
-Retrieve jobs (many `ActiveRecord` query methods are supported):
+## Persistence
+
+Optionally, ActiveRecord-like persistence methods (`save!`, `destroy!`, `update!`) can be added to job classes:
 
 ```ruby
-SampleJob.all                      # SampleJobs
-ApplicationJob.all                 # Jobs of all types
-Arj::Base.all                      # Jobs of all types
-Arj::Base.where(queue_name: 'foo') # Jobs in a particular queue
+class ApplicationJob < ActiveJob::Base
+  include Arj::Persistence
+end
 ```
+
+## Worker
 
 Run all availble jobs using a worker:
 
@@ -115,14 +106,14 @@ Start a worker which will run jobs as they become available:
 Arj::Worker.new.start
 ```
 
-## Extension Examples
+## Customization Examples
 
 ### Custom retry scheduling
 
 Override `ApplicationJob#retry_job`:
 
 ```ruby
-class ApplicationJob < Arj::Base
+class ApplicationJob < ActiveJob::Base
   def retry_job(options = {})
     options[:wait] = 5 + (executions**4) unless options[:wait] || options[:wait_until]
     super
@@ -142,10 +133,10 @@ class AddShardToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Override `#set`, `#serialize` and `#deserialize_record`:
+Override `#set`, `#serialize` and `#deserialize`:
 
 ```ruby
-class ApplicationJob < Arj::Base
+class ApplicationJob < ActiveJob::Base
   attr_accessor :shard
 
   def set(options = {})
@@ -156,16 +147,16 @@ class ApplicationJob < Arj::Base
     super.merge('shard' => @shard)
   end
 
-  def deserialize_record(record)
+  def deserialize(record)
     super.tap { @shard = record.shard }
   end
 end
 ```
 
-Enqueue a job with a shard:
+Usage:
 
 ```ruby
-SampleJob.set(shard: 22).perform_later(arg: 'foo')
+SampleJob.set(shard: 22).perform_later('foo')
 ```
 
 ### Adding a last error column
@@ -173,17 +164,17 @@ SampleJob.set(shard: 22).perform_later(arg: 'foo')
 Apply a migration:
 
 ```ruby
-class AddShardToJobs < ActiveRecord::Migration[7.1]
+class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
   def change
     add_column :jobs, :last_error, :text
   end
 end
 ```
 
-Override `#rescue_from`, `#serialize` and `#deserialize_record`:
+Configure retries and override `#serialize` and `#deserialize`:
 
 ```ruby
-class ApplicationJob < Arj::Base
+class ApplicationJob < ActiveJob::Base
   attr_accessor :last_error
 
   retry_on Exception
@@ -207,12 +198,3 @@ class ApplicationJob < Arj::Base
   end
 end
 ```
-
-Enqueue and run a job which will fail:
-
-```ruby
-job = SampleJob.perform_later(error: 'failed')
-job.perform_now
-puts job.last_error
-```
-

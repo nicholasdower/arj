@@ -1,7 +1,11 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'logger'
 require 'pry'
+
+ENV['LEVEL'] ||= Logger::INFO.to_s
+
 require_relative 'init'
 
 # Reload all source files.
@@ -42,10 +46,23 @@ class LevelCommand < Pry::ClassCommand
 end
 Pry::Commands.add_command(LevelCommand)
 
+# Reset the REPL.
+class Pry
+  class Command
+    class Reset < Pry::ClassCommand
+      def process
+        output.puts 'Pry reset.'
+        exec './script/console'
+      end
+    end
+  end
+end
+
+Pry::Commands.add_command(LevelCommand)
 Pry.config.pager = false
 
 begin
-  Db.create
+  Db.reset
   Pry.start
 ensure
   Db.destroy

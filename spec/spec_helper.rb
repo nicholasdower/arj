@@ -2,7 +2,11 @@
 
 require 'active_job'
 require 'active_record'
+require 'logger'
 require 'timecop'
+
+ENV['LEVEL'] ||= Logger::WARN.to_s
+
 require_relative '../script/init'
 
 RSpec.configure do |config|

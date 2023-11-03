@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-# ActiveJob queue adapter. Set via Rails config:
-#
-#   config.active_job.queue_adapter = :arj
+require 'active_job/base'
+require_relative 'arj/persistence'
+
 class ArjAdapter
   def enqueue(job)
-    raise "expected ArjJob, found #{job.class}" unless job.is_a?(Arj::Base)
+    raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
-    job.enqueue_record!
+    Arj::Persistence.enqueue_record(job)
   end
 
   def enqueue_at(job, timestamp)
-    raise "expected ArjJob, found #{job.class}" unless job.is_a?(Arj::Base)
+    raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
-    job.enqueue_record!(timestamp)
+    Arj::Persistence.enqueue_record(job, timestamp)
   end
 end

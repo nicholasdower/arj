@@ -1,17 +1,16 @@
 # frozen_string_literal: true
 
-require 'active_job'
+require 'active_job/base'
 require 'logger'
 require_relative '../arj'
 
 module Arj
-  # A worker which performs jobs.
   class Worker
     attr_reader :queue_name, :max_executions, :sleep_delay
     attr_accessor :logger
 
     def self.next_job(queue_name: nil, max_executions: nil)
-      relation = Arj::Base.where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
+      relation = Arj.where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
       relation = relation.where(queue_name:) if queue_name
       relation = relation.where('executions < ?', max_executions) if max_executions
       relation.order(priority: :asc, scheduled_at: :asc).first

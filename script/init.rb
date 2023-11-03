@@ -2,7 +2,7 @@
 
 require 'active_record'
 require 'fileutils'
-require 'singleton'
+require 'logger'
 require 'sqlite3'
 require 'tempfile'
 
@@ -11,7 +11,7 @@ Dir.glob('lib/**/*.rb').each { |f| require "./#{f}" }
 ActiveJob::Base.queue_adapter = :arj
 Time.zone = 'UTC'
 
-level = Integer(ENV.fetch('LEVEL', Logger::WARN))
+level = Integer(ENV.fetch('LEVEL', Logger::INFO))
 ActiveRecord::Base.logger ||= Logger.new(STDOUT, level: level)
 ActiveRecord::Base.logger.level = level
 ActiveJob::Base.logger ||= Logger.new(STDOUT)
@@ -61,7 +61,7 @@ class Db
     @connected = false
   end
 
-  def self.recreate
+  def self.reset
     destroy
     create
   end

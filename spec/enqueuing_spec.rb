@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../spec_helper'
+require_relative 'spec_helper'
 
-describe Arj::Base do
+describe 'enqueueing' do
   let(:set_options) { {} }
   let(:args) { [] }
   let(:kwargs) { {} }
