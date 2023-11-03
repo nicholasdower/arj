@@ -22,7 +22,7 @@ make rubocop
 make console
 > Arj::TestJob.perform_later
 > Arj::TestJob.set(wait: 5.minutes).perform_later
-> Arj::TestJobWithRetry.perform_later(error: Arj::TestError)
+> Arj::TestJobWithRetry.perform_later(error: Arj::RetryError)
 > Arj.next.perform_now
 > reset
 ```
