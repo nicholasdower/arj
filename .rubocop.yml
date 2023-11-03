@@ -23,3 +23,6 @@ Metrics/MethodLength:
 
 Style/Documentation:
   Enabled: false
+
+Style/RescueModifier:
+  Enabled: false

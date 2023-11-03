@@ -12,7 +12,7 @@ module Arj
     def initialize(
       description: 'Arj::Worker(*)',
       source: -> { Arj.next },
-      sleep_delay: 5,
+      sleep_delay: 5.seconds,
       logger: ActiveJob::Base.logger
     )
       @description = description
@@ -24,7 +24,7 @@ module Arj
     def start
       loop do
         work_off
-        sleep @sleep_delay
+        sleep @sleep_delay.in_seconds
       end
     end
 
@@ -34,7 +34,7 @@ module Arj
 
     def perform_next
       if (job = next_job)
-        job.perform_now rescue false
+        job.perform_now rescue nil
         true
       else
         @logger.info("#{description} - No available jobs found")

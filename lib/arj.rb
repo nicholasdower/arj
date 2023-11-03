@@ -11,22 +11,14 @@ require_relative 'arj/worker'
 module Arj
   class << self
     include QueryMethods::ClassMethods
-
-    def record_class=(clazz)
-      raise "invalid record class: #{clazz}" unless clazz < ActiveRecord::Base || clazz.is_a?(String)
-
-      @record_class = clazz
-    end
+    attr_writer :record_class, :base_classes
 
     def record_class
-      unless @record_class
-        record_class = 'Job'.constantize
-        raise "invalid record class: #{record_class}" unless record_class < ActiveRecord::Base
+      @record_class ||= 'Job'.constantize
+    end
 
-        @record_class = record_class
-      end
-
-      @record_class
+    def base_classes
+      @base_classes ||= %w[ApplicationJob]
     end
 
     def next(queue_name: nil, max_executions: nil)

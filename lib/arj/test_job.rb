@@ -8,8 +8,6 @@ module Arj
   class TestJob < ActiveJob::Base
     def perform(*args, **kwargs) # rubocop:disable Lint/UnusedMethodArgument
       raise(kwargs[:error], 'error') if kwargs[:error]
-
-      arguments
     end
   end
 
@@ -21,9 +19,9 @@ module Arj
     include QueryMethods
   end
 
-  class TestJobWithRetry < TestJob
-    class Error < StandardError; end
+  class TestError < StandardError; end
 
-    retry_on Error, wait: 1.minute, attempts: 3
+  class TestJobWithRetry < TestJob
+    retry_on TestError, wait: 1.minute, attempts: 3
   end
 end

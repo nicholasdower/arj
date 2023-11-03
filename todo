@@ -7,3 +7,4 @@ Allow subclasses to set which fields are stored
 Test what happens when the record is missing a required field
 Timeouts
 API docs
+Handle errors enqueuing, prevent busy loop

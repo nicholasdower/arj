@@ -20,40 +20,9 @@ make rubocop
 
 ```shell
 make console
-```
-
-Enqueue a job:
-
-```ruby
-> job = Arj::TestJob.perform_later
-```
-
-Enqueue a job which retries:
-
-```ruby
-> Arj::TestJobWithRetry.perform_later(error: Arj::TestJobWithRetry::Error)
-```
-
-Find jobs:
-
-```ruby
-> Arj.all
-```
-
-Run a job:
-
-```ruby
-> job.perform_now
-```
-
-Destroy all jobs:
-
-```ruby
-> Arj.destroy_all
-```
-
-Reset the console:
-
-```shell
+> Arj::TestJob.perform_later
+> Arj::TestJob.set(wait: 5.minutes).perform_later
+> Arj::TestJobWithRetry.perform_later(error: Arj::TestError)
+> Arj.next.perform_now
 > reset
 ```

@@ -24,9 +24,9 @@ module Arj
 
         if job.provider_job_id
           record = Arj.record_class.find(job.provider_job_id)
-          record.update!(Persistence.serialize(job))
+          record.update!(Persistence.record_attributes(job))
         else
-          record = Arj.record_class.create!(Persistence.serialize(job))
+          record = Arj.record_class.create!(Persistence.record_attributes(job))
           enhance(job)
         end
         Persistence.from_record(record, job)
@@ -54,36 +54,38 @@ module Arj
         raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
         if job.provider_job_id && job.provider_job_id != record.id
-          raise "record already set on #{job.class}: #{job.provider_job_id}"
+          raise "unexpected id for #{job.class}: #{record.id} vs. #{job.provider_job_id}"
         end
 
         job.successfully_enqueued = true
-        record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
-        job_data = record.attributes.slice(*REQUIRED_RECORD_ATTRIBUTES)
-        job_data['provider_job_id'] = record.id
-        serialized_arguments = JSON.parse(job_data['arguments'])
-        job_data['arguments'] = serialized_arguments
-        job_data['exception_executions'] = JSON.parse(job_data['exception_executions'])
-        job_data['enqueued_at'] = record.enqueued_at.iso8601
-        job_data['scheduled_at'] = record.scheduled_at&.iso8601 if job_data['scheduled_at']
-
+        job_data = job_data(record)
         job.deserialize(job_data)
 
-        # ActiveJob deserializes arguments on demand.
-        job.arguments = ActiveJob::Arguments.deserialize(serialized_arguments)
+        # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
+        job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
 
         job
       end
 
-      def serialize(job)
+      def job_data(record)
+        record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
+        job_data = record.attributes.slice(*REQUIRED_RECORD_ATTRIBUTES)
+        job_data['arguments'] = JSON.parse(job_data['arguments'])
+        job_data['provider_job_id'] = record.id
+        job_data['exception_executions'] = JSON.parse(job_data['exception_executions'])
+        job_data['enqueued_at'] = job_data['enqueued_at'].iso8601
+        job_data['scheduled_at'] = job_data['scheduled_at']&.iso8601 if job_data['scheduled_at']
+        job_data
+      end
+
+      def record_attributes(job)
         serialized = job.serialize
         serialized.fetch_values(*REQUIRED_JOB_ATTRIBUTES)
         serialized.slice!(*REQUIRED_JOB_ATTRIBUTES)
         serialized.delete('provider_job_id')
         serialized['arguments'] = serialized['arguments'].to_json
         serialized['exception_executions'] = serialized['exception_executions'].to_json
-
-        serialized
+        serialized.symbolize_keys
       end
     end
 
@@ -98,7 +100,7 @@ module Arj
 
     def save!
       record = Arj.record_class.find(provider_job_id)
-      record.update!(Persistence.serialize(self))
+      record.update!(Persistence.record_attributes(self))
       Persistence.from_record(record, self)
       self
     end
@@ -108,7 +110,7 @@ module Arj
 
       attributes.each { |k, v| send("#{k}=".to_sym, v) }
       record = Arj.record_class.find(provider_job_id)
-      record.update!(Persistence.serialize(self))
+      record.update!(Persistence.record_attributes(self))
 
       self
     end
