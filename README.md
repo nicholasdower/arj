@@ -186,22 +186,16 @@ Override `#rescue_from`, `#serialize` and `#deserialize_record`:
 class ApplicationJob < Arj::Base
   attr_accessor :last_error
 
-  rescue_from(Exception) do |error|
-    self.last_error = error
-    retry_job
-  end
+  retry_on Exception
 
-  def last_error=(error)
-    raise "unexpected error #{error.class}" unless error.nil? || error.is_a?(Exception) || error.is_a?(String)
-
-    if error.is_a?(Exception)
+  def set(options = nil)
+    super
+    if (error = options[:error])
       backtrace = error.backtrace&.map { |line| "\t#{line}" }&.join("\n")
       error = backtrace ? "#{error.class}: #{error.message}\n#{backtrace}" : "#{error.class}: #{error.message}"
+
+      @last_error = error&.truncate(65535, omission: '… (truncated)')
     end
-
-    @last_error = error&.truncate(65535, omission: '… (truncated)')
-
-    self
   end
 
   def serialize

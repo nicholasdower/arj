@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'active_job'
-require 'yaml'
 
 module Arj
   # Base Arj job class
@@ -77,6 +76,12 @@ module Arj
 
     def save_record!
       @record.update!(serialize)
+      self
+    end
+
+    def update_job!(**kwargs)
+      kwargs.each { |k, v| send("#{k}=".to_sym, v) }
+      save_record!
       self
     end
 

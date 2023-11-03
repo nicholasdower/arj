@@ -42,6 +42,8 @@ class LevelCommand < Pry::ClassCommand
 end
 Pry::Commands.add_command(LevelCommand)
 
+Pry.config.pager = false
+
 begin
   Db.create
   Pry.start
