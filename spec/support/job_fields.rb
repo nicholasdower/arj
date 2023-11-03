@@ -91,4 +91,8 @@ shared_examples 'job fields' do |expected_clazz|
       expect(subject.scheduled_at).to eq(1.minute.from_now.to_s)
     end
   end
+
+  it 'has successfully_enqueued?' do
+    expect(subject.successfully_enqueued?).to eq(true)
+  end
 end
