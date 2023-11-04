@@ -29,10 +29,10 @@ if [ `git rev-parse origin/master` != `git rev-parse master` ]; then
   exit 1
 fi
 
-old_version=$(cat .release-version)
-major_version=$(cat .release-version | cut -d. -f1)
-minor_version=$(cat .release-version | cut -d. -f2)
-patch_version=$(cat .release-version | cut -d. -f3)
+old_version=$(ruby -r ./lib/arj/version.rb -e 'puts Arj::VERSION')
+major_version=$(echo $old_version | cut -d. -f1)
+minor_version=$(echo $old_version | cut -d. -f2)
+patch_version=$(echo $old_version | cut -d. -f3)
 
 if [ "$RELEASE_TYPE" = "patch" ]; then
   patch_version=$((patch_version + 1))
@@ -60,8 +60,12 @@ echo "Notes:"
 cat .release-notes
 echo
 
-echo "Updating .release-version"
-echo $new_version > .release-version
+echo "Updating lib/arj/version.rb"
+echo "# frozen_string_literal: true"  > lib/arj/version.rb
+echo                                 >> lib/arj/version.rb
+echo "module Arj"                    >> lib/arj/version.rb
+echo "  VERSION = '$new_version'"    >> lib/arj/version.rb
+echo "end"                           >> lib/arj/version.rb
 
 echo "Updating CHANGELOG.md"
 echo "## $new_version" >> CHANGELOG.md.new

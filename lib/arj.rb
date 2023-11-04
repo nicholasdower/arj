@@ -8,9 +8,12 @@ require_relative 'arj/relation'
 require_relative 'arj/version'
 require_relative 'arj/worker'
 
-# Provides:
-#   - Global Arj settings `record_class` and `base_classes`.
-#   - Job query and persistence methods.
+# Arj. An ActiveJob queuing backend which uses ActiveRecord.
+#
+# The Arj module provides:
+# - Global Arj settings {record_class} and {base_classes}.
+# - Job query methods. See {Arj::QueryMethods}.
+# - Job persistence methods similar to {Arj::Persistence}.
 module Arj
   @record_class = 'Job'
   @base_classes = %w[ApplicationJob]
@@ -18,68 +21,83 @@ module Arj
   class << self
     include QueryMethods::ClassMethods
 
-    # Sets the ActiveRecord job class used to interact with jobs in the database.
+    # The Class used to interact with jobs in the database. Defaults to +Job+.
     #
-    # Defaults to `Job`.
-    def record_class=(clazz)
-      raise "invalid class: #{clazz || 'nil'}" unless clazz.is_a?(Class) || clazz.is_a?(String)
-
-      @record_class = clazz
-    end
-
-    # Returns the ActiveRecord job class.
+    # Note that if set to a String, will be lazily constantized.
+    #
+    # @return [Class]
+    # @!attribute [rw] record_class
     def record_class
       @record_class = @record_class.constantize if @record_class.is_a?(String)
       @record_class
     end
 
-    # Sets the list of `ActiveJob::Base` subclasses which should be considered base classes for the purposes of
-    # querying. For instance, if `BaseJob` is configured as a base class and `ChildJob` isn't, `BaseJob.last` would
-    # return the last job, regardless of type, whereas `ChildJob.last` would return the last job of type `ChildJob`.
-    #
-    # Defaults to `[ActiveJob]`.
-    def base_classes=(classes)
-      raise "base classes not enumerable: #{classes}" unless classes <= Enumerable
+    def record_class=(clazz)
+      raise ArgumentError, "invalid class: #{clazz || 'nil'}" unless clazz.is_a?(Class) || clazz.is_a?(String)
 
-      @base_classes = classes.map do |clazz|
-        if clazz.is_a?(String)
-          clazz
-        elsif clazz.is_a?(Class)
-          clazz.name
-        else
-          raise "invalid base class: #{clazz}"
-        end
-      end.freeze
+      @record_class = clazz
     end
 
-    # Returns the list of `ActiveJob::Base` subclasses which should be considered base classes for the purposes of
-    # querying. For instance, if `BaseJob` is configured as a base class and `ChildJob` isn't, `BaseJob.last` would
-    # return the last job, regardless of type, whereas `ChildJob.last` would return the last job of type `ChildJob`.
-    def base_classes
-      @base_classes
-    end
-
-    # Returns the next performable job in the specified queue (or any queue if none is specified) and with fewer than
-    # the specified number of maximum executions (or any number of executions if none is specified).
+    # List of names of job classes which should be considered base classes for the purposes of querying. Defaults to
+    # +"ApplicationJob"+.
     #
-    # A job is considered performable if `scheduled_at` is `nil` or in the past.
-    def next(queue_name: nil, max_executions: nil)
+    # For instance, given the following classes:
+    #
+    #   class ApplicationJob < ActiveJob::Base
+    #     include Arj::QueryMethods
+    #   end
+    #
+    #   class BaseJob < ApplicationJob
+    #     Arj.base_classes << name
+    #   end
+    #
+    #   class ChildJob < BaseJob; end
+    #
+    # Querying via these classes would produce the following results:
+    #
+    #   ApplicationJob.last # Returns the last job, regardless of type
+    #   BaseJob.last        # Returns the last job, regardless of type
+    #   ChildJob.last       # Returns the last job of type ChildJob
+    #
+    # @return [Array<String>]
+    attr_reader :base_classes
+
+    # Returns the first available job.
+    #
+    # Jobs are ordered by:
+    # - +priority+ ascending, nulls last
+    # - +scheduled_at+ ascending, nulls last
+    #
+    # The following criteria may optionally be specified:
+    # - One or more job classes
+    # - One or more queues
+    # - The maximum number of executions (exclusive)
+    #
+    # @return [ActiveJob::Base]
+    def next(job_class: nil, queue_name: nil, max_executions: nil)
       relation = Arj.where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
+      relation = relation.where(job_class:) if job_class
       relation = relation.where(queue_name:) if queue_name
       relation = relation.where('executions < ?', max_executions) if max_executions
-      relation.order(priority: :asc, scheduled_at: :asc).first
+      relation = relation.order(
+        Arel.sql(
+          <<-SQL.squish
+            CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
+            CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at
+          SQL
+        )
+      )
+      relation.first
     end
 
+    # @return [Boolean] +true+ if the specified job has a corresponding record in the database
     def exists?(job)
       job.provider_job_id.nil? ? false : Arj.record_class.exists?(job.provider_job_id)
     end
 
-    def destroyed?(job)
-      raise 'record not set' if job.provider_job_id.nil?
-
-      exists?(job)
-    end
-
+    # Reloads the attributes of the specified job from the database.
+    #
+    # @return [ActiveJob::Base] the specified job, updated
     def reload(job)
       raise 'record not set' if job.provider_job_id.nil?
 
@@ -91,15 +109,32 @@ module Arj
       raise
     end
 
+    # Saves the database record associated with the specified job. Raises if the record is invalid.
+    #
+    # Example usage:
+    #   class SampleJob < ActiveJob::Base; end
+    #
+    #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
+    #   job.queue_name = 'other queue'
+    #   Arj.save!(job)
+    #
+    # @return [Boolean] +true+
     def save!(job)
       raise 'record not set' if job.provider_job_id.nil?
 
       record = Arj.record_class.find(job.provider_job_id)
-      record.update!(Persistence.record_attributes(job))
-      Persistence.from_record(record, job)
-      job
+      record.update!(Persistence.record_attributes(job)).tap { Persistence.from_record(record, job) }
     end
 
+    # Updates the database record associated with the specified job. Raises if the record is invalid.
+    #
+    # Example usage:
+    #   class SampleJob < ActiveJob::Base; end
+    #
+    #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
+    #   Arj.update!(job, queue_name: 'other queue')
+    #
+    # @return [Boolean] +true+
     def update!(job, attributes)
       raise "invalid attributes: #{attributes}" unless attributes.is_a?(Hash)
       raise 'record not set' if job.provider_job_id.nil?
@@ -107,10 +142,17 @@ module Arj
       attributes.each { |k, v| job.send("#{k}=".to_sym, v) }
       record = Arj.record_class.find(job.provider_job_id)
       record.update!(Persistence.record_attributes(job))
-
-      job
     end
 
+    # Destroys the database record associated with the specified job.
+    #
+    # Example usage:
+    #   class SampleJob < ActiveJob::Base; end
+    #
+    #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
+    #   Arj.destroy!(job)
+    #
+    # @return [ActiveJob::Base] the specified job
     def destroy!(job)
       raise 'record not set' if job.provider_job_id.nil?
 
@@ -118,6 +160,13 @@ module Arj
       record.destroy!
       job.successfully_enqueued = false
       job
+    end
+
+    # @return [Boolean] +true+ if the specified job has been deleted from the database
+    def destroyed?(job)
+      raise 'record not set' if job.provider_job_id.nil?
+
+      exists?(job)
     end
   end
 end

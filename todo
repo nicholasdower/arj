@@ -1,4 +1,4 @@
-Add perform override to TestJob
+Add perform override to Test::Job
 Make it easier to add fields without having to override serialize and deserialize
 Add helper to convert errors to strings
 Test what happens when the record is missing a required field
@@ -10,3 +10,4 @@ Add ActiveJob cheatsheet to README.md.
 Require test coverage.
 Figure out version scheme. Should it track ActiveJob?
 Add documentation for query methods.
+Test next. Nulls, starvation, etc.

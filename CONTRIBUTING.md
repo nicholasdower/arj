@@ -13,11 +13,15 @@ Install Ruby 3.2.2, then run `make help`:
 Arj, An ActiveJob queuing backend which uses ActiveRecord.
 
 Targets:
-  install:   Run bundle install
-  console:   Start an interactive console
-  rubocop:   Run rubocop
-  rspec:     Run all specs
-  coverage:  Run all specs with coverage
-  precommit: Run lint and specs
-  watch:     Run lint and specs on file change
+  install:     Run bundle install
+  console:     Start an interactive console
+  rubocop:     Run rubocop
+  rubocop-fix: Run rubocop and fix auto-correctable offenses
+  rspec:       Run all specs
+  coverage:    Run all specs with coverage
+  precommit:   Run lint and specs
+  watch:       Run lint and specs on file change
+  yard:        Generate documentation
+  yard-open:   Generate and open documentation
+  clean:       Remove *.gem, .yardoc/, doc/
 ```

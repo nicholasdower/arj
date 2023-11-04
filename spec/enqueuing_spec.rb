@@ -4,7 +4,7 @@ require_relative 'spec_helper'
 
 describe 'enqueueing' do
   context '.perform_later' do
-    subject { Arj::TestJob.set(set_options).perform_later(*args, **kwargs) }
+    subject { Arj::Test::Job.set(set_options).perform_later(*args, **kwargs) }
 
     let(:set_options) { {} }
     let(:args) { [] }
@@ -15,7 +15,7 @@ describe 'enqueueing' do
     end
 
     context 'return value' do
-      include_examples 'job fields', Arj::TestJob
+      include_examples 'job fields', Arj::Test::Job
     end
   end
 
@@ -24,7 +24,7 @@ describe 'enqueueing' do
 
     let(:options) { {} }
 
-    before { Arj::TestJob.perform_later }
+    before { Arj::Test::Job.perform_later }
 
     context 'when wait specified' do
       let(:options) { { wait: 1.hour } }
@@ -62,7 +62,7 @@ describe 'enqueueing' do
   context '.perform_all_later' do
     subject { ActiveJob.perform_all_later(*jobs) }
 
-    let(:jobs) { [Arj::TestJob.new('one'), Arj::TestJob.new('two')] }
+    let(:jobs) { [Arj::Test::Job.new('one'), Arj::Test::Job.new('two')] }
 
     it 'persists all jobs' do
       expect { subject }.to change(Job, :count).from(0).to(2)

@@ -15,9 +15,7 @@ Gem::Specification.new do |spec|
   spec.metadata['rubygems_mfa_required'] = 'true'
   spec.required_ruby_version = '>= 3.2.2'
 
-  spec.files =
-    Dir['lib/**/*'] +
-    ['.release-version']
+  spec.files = Dir['lib/**/*']
 
   spec.add_dependency 'activejob', '~>  7.0'
   spec.add_dependency 'activerecord', '~>  7.0'

@@ -209,18 +209,18 @@ end
 
 The following sample jobs are provided for use in tests:
 
-- `TestJob`
-- `TestJobWithPersistence`
-- `TestJobWithQuery`
-- `TestJobWithRetry`
+- `Test::Job`
+- `Test::JobWithPersistence`
+- `Test::JobWithQuery`
+- `Test::JobWithRetry`
 
 To test job failures:
 
 ```ruby
-Arj::TestJobWithRetry.perform_later(error: StandardError)
+Arj::Test::JobWithRetry.perform_later(StandardError)
 ```
 
 To test retries:
 ```ruby
-Arj::TestJobWithRetry.perform_later(error: Arj::TestJobWithRetry::Error)
+Arj::Test::JobWithRetry.perform_later(Arj::Test::Error)
 ```

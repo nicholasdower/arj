@@ -3,4 +3,6 @@
 /.idea
 /.install
 /.test.db*
+/.yardoc
 /coverage
+/doc

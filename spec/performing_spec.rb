@@ -27,7 +27,7 @@ describe 'performing' do
     end
 
     context '.execute' do
-      let(:subject) { Arj::TestJob.execute(job.serialize) }
+      let(:subject) { Arj::Test::Job.execute(job.serialize) }
 
       context 'original job' do
         let(:job) { original_job }
@@ -48,7 +48,7 @@ describe 'performing' do
   end
 
   context '.perform_now' do
-    let(:subject) { Arj::TestJob.perform_now('some_arg') }
+    let(:subject) { Arj::Test::Job.perform_now('some_arg') }
 
     it 'does not persist a job' do
       expect { subject }.not_to change(Job, :count).from(0)
@@ -60,7 +60,7 @@ describe 'performing' do
   end
 
   context '.perform_now' do
-    let(:subject) { Arj::TestJob.new('some_arg').perform_now }
+    let(:subject) { Arj::Test::Job.new('some_arg').perform_now }
 
     it 'does not persist a job' do
       expect { subject }.not_to change(Job, :count).from(0)
@@ -72,21 +72,21 @@ describe 'performing' do
   end
 
   context '.perform_later' do
-    let(:original_job) { Arj::TestJob.perform_later('some_arg') }
+    let(:original_job) { Arj::Test::Job.perform_later('some_arg') }
     let(:enqueue) { original_job }
 
     include_examples 'perform'
   end
 
   context '.enqueue' do
-    let(:original_job) { Arj::TestJob.new('some_arg') }
+    let(:original_job) { Arj::Test::Job.new('some_arg') }
     let(:enqueue) { original_job.enqueue }
 
     include_examples 'perform'
   end
 
   context '.perform_all_later' do
-    let(:original_job) { Arj::TestJob.new('some_arg') }
+    let(:original_job) { Arj::Test::Job.new('some_arg') }
     let(:enqueue) { ActiveJob.perform_all_later(original_job) }
 
     include_examples 'perform'

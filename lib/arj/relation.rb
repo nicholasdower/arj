@@ -5,7 +5,7 @@ require_relative 'persistence'
 require_relative '../arj'
 
 module Arj
-  # Wrapper for ActiveRecord relations which maps record objects to ActiveJob::Base objects.
+  # Wrapper for ActiveRecord::Relation which maps record objects to job objects.
   class Relation
     def initialize(ar_relation)
       @ar_relation = ar_relation
@@ -37,6 +37,7 @@ module Arj
       true
     end
 
+    # Updates each matching job with the specified attributes.
     def update_job!(attributes)
       to_a.map do |job|
         job.update!(attributes)
