@@ -8,6 +8,5 @@ Handle errors enqueuing, prevent busy loop
 Allow record class to be set per job.
 Add ActiveJob cheatsheet to README.md.
 Require test coverage.
-Add exists?, destroyed?
-Add persistence methods to Arj so that you don't need the module.
 Figure out version scheme. Should it track ActiveJob?
+Add documentation for query methods.

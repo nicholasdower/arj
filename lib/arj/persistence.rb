@@ -89,37 +89,28 @@ module Arj
       end
     end
 
+    def exists?
+      Arj.exists?(self)
+    end
+
+    def destroyed?
+      Arj.destroyed?(self)
+    end
+
     def reload
-      record = Arj.record_class.find(provider_job_id)
-      Persistence.from_record(record, self)
-      self
-    rescue ActiveRecord::RecordNotFound
-      self.successfully_enqueued = false
-      raise
+      Arj.reload(self)
     end
 
     def save!
-      record = Arj.record_class.find(provider_job_id)
-      record.update!(Persistence.record_attributes(self))
-      Persistence.from_record(record, self)
-      self
+      Arj.save!(self)
     end
 
     def update!(attributes)
-      raise "invalid attributes: #{attributes}" unless attributes.is_a?(Hash)
-
-      attributes.each { |k, v| send("#{k}=".to_sym, v) }
-      record = Arj.record_class.find(provider_job_id)
-      record.update!(Persistence.record_attributes(self))
-
-      self
+      Arj.update!(self, attributes)
     end
 
     def destroy!
-      record = Arj.record_class.find(provider_job_id)
-      record.destroy!
-      self.successfully_enqueued = false
-      self
+      Arj.destroy!(self)
     end
   end
 end
