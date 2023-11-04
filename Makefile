@@ -1,11 +1,12 @@
 .PHONY: help
 help:
-	@echo "     _             _ "
-	@echo "    / \     _ __  (_)"
-	@echo "   / _ \   | '__| | |"
-	@echo "  / ___ \  | |    | |"
-	@echo " /_/   \_\ |_|   _/ |"
-	@echo "                |__/ "
+	@echo '                    _ '
+	@echo '     /\            |_|'
+	@echo '    /  \     _ __   _ '
+	@echo '   / /\ \   |  __| | |'
+	@echo '  / ____ \  | |    | |'
+	@echo ' /_/    \_\ |_|   _/ |'
+	@echo '                 |__/ '
 	@echo 'Arj, An ActiveJob queuing backend which uses ActiveRecord.'
 	@echo
 	@echo 'Targets:'
