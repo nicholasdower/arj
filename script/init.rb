@@ -16,6 +16,7 @@ ActiveRecord::Base.logger ||= Logger.new(STDOUT, level: level)
 ActiveRecord::Base.logger.level = level
 ActiveJob::Base.logger ||= Logger.new(STDOUT)
 ActiveJob::Base.logger.level = level
+ActiveRecord::Migration.verbose = false unless level <= 1
 
 class Job < ActiveRecord::Base
 end

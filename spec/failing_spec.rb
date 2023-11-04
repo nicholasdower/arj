@@ -69,14 +69,14 @@ describe 'failing' do
     end
 
     context 'with retries' do
-      let(:error) { Arj::RetryError }
+      let(:error) { Arj::TestError }
 
       it 'does not raise' do
         expect { subject }.not_to raise_error
       end
 
       it 'returns the error' do
-        expect(subject).to be_a(Arj::RetryError)
+        expect(subject).to be_a(Arj::TestError)
       end
 
       it "increments the original job's executions" do
@@ -109,19 +109,19 @@ describe 'failing' do
 
       it "sets the original job's exception_executions" do
         expect { subject rescue nil }.to change { original_job.exception_executions }
-          .from({}).to({ '[Arj::RetryError]' => 1 })
+          .from({}).to({ '[Arj::TestError]' => 1 })
       end
 
       it "sets the persisted job's exception_executions" do
         expect { subject rescue nil }.to change { Arj.last.exception_executions }
-          .from({}).to({ '[Arj::RetryError]' => 1 })
+          .from({}).to({ '[Arj::TestError]' => 1 })
       end
 
       context 'when all attempts are exhausted' do
         before { job.perform_now }
 
         it 'raises' do
-          expect { subject }.to raise_error(Arj::RetryError)
+          expect { subject }.to raise_error(Arj::TestError)
         end
 
         it 'deletes the job' do

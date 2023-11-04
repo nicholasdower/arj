@@ -28,9 +28,9 @@ module Arj
     include QueryMethods
   end
 
-  class RetryError < StandardError; end
+  class TestError < StandardError; end
 
   class TestJobWithRetry < TestJob
-    retry_on RetryError, wait: 1.minute, attempts: 2
+    retry_on TestError, wait: 1.minute, attempts: 2
   end
 end

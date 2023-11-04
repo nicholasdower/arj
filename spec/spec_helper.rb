@@ -10,15 +10,13 @@ require 'active_record'
 require 'logger'
 require 'timecop'
 
-ENV['LEVEL'] ||= Logger::WARN.to_s
+ENV['LEVEL'] ||= Logger::FATAL.to_s
 
 require_relative '../script/init'
 
 Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
 
 RSpec.configure do |config|
-  config.formatter = :documentation
-
   config.before(:suite) do
     Db.create
   end

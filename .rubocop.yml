@@ -3,6 +3,7 @@ AllCops:
   NewCops: enable
   Include:
     - 'script/console'
+    - 'script/watch'
     - 'spec/**/*.rb'
     - 'lib/**/*.rb'
 

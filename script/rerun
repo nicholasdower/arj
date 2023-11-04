@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'find'
+require 'optparse'
+
+# Runs the specified command and restarts it when files in the specified directories change.
+class Watcher
+  MIN_REFRESH_DELAY = 2
+
+  def initialize(find_args, command)
+    raise 'missing find_args' unless find_args&.any?
+    raise 'missing command' unless command&.any?
+
+    @find_args = find_args
+    @command = command
+    @watched_files = watched_files
+    @alive = true
+    @last_change = Time.now
+  end
+
+  def watch
+    @pid = Process.spawn(*@command, pgroup: true) if @alive
+    while @alive
+      minutes_since_last_change = ((Time.now - @last_change) / 60).to_i
+      minutes_since_last_change = [minutes_since_last_change, 0].max
+      delay = [60, 20, 10, 5, 0].find { |t| minutes_since_last_change >= t }
+      delay = [delay, MIN_REFRESH_DELAY].max
+      sleep delay
+      refresh
+    end
+  end
+
+  def refresh
+    files = updated_files
+    return if files.empty?
+
+    puts "changed: #{files.join(' ')}"
+    @last_change = Time.now
+    kill('TERM')
+    @pid = Process.spawn(*@command, pgroup: true) if @alive
+  end
+
+  def kill(signal)
+    return unless @pid
+
+    Process.kill(signal, -Process.getpgid(@pid))
+  rescue Errno::ESRCH
+    # ignore
+  ensure
+    @pid = nil
+  end
+
+  def die(signal)
+    kill(signal)
+    @alive = false
+  end
+
+  def watched_files
+    files = `find #{@find_args.join(' ')}`.lines.map(&:strip)
+    entries = files.flat_map do |file|
+      if FileTest.file?(file)
+        [[file, File.mtime(file).to_i]]
+      else
+        []
+      end
+    end
+    entries.to_set
+  end
+
+  def updated_files
+    new_watched_files = watched_files
+    difference = (new_watched_files - @watched_files) + (@watched_files - new_watched_files)
+    @watched_files = new_watched_files
+    difference.map(&:first)
+  end
+end
+
+def help
+  warn 'Usage: ./scripts/rerun (--include path... | --exclude path...)... -- <command>'
+  exit 1
+end
+
+separator = ARGV.find_index('--')
+help unless separator&.between?(1, ARGV.size - 2)
+find_args = ARGV[0...separator]
+
+command = ARGV[(separator + 1)..]
+help if command.empty?
+
+watcher = Watcher.new(find_args, command)
+
+Signal.trap('INT') do
+  watcher.die('INT')
+  exit 2
+end
+
+Signal.trap('TERM') do
+  watcher.die('TERM')
+  exit 15
+end
+watcher.watch

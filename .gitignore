@@ -1,6 +1,6 @@
-/.bundle*
-/.idea
-/*.gem
 .DS_Store
+/*.gem
+/.idea
+/.install
 /.test.db*
 /coverage
