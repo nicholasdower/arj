@@ -1,10 +1,10 @@
-Add testing to README.md
 Add perform override to TestJob
 Make it easier to add fields without having to override serialize and deserialize
 Add helper to convert errors to strings
-Stop using private deserialize_arguments_if_needed method
-Allow subclasses to set which fields are stored
 Test what happens when the record is missing a required field
 Timeouts
 API docs
 Handle errors enqueuing, prevent busy loop
+Allow record class to be set per job.
+Add ActiveJob cheatsheet to README.md.
+Require test coverage.
