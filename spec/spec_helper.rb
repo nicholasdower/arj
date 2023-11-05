@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
-if ENV['COVERAGE'] == '1'
-  require 'simplecov'
-  SimpleCov.start
-end
+require_relative 'support/coverage' if ENV['COVERAGE'] == '1'
 
 require 'active_job'
 require 'active_record'
+require 'awesome_print'
 require 'logger'
 require 'timecop'
 

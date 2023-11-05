@@ -23,7 +23,6 @@ help:
 	@echo '  watch:       Run lint and specs on file change'
 	@echo '  yard:        Generate documentation'
 	@echo '  yard-open:   Generate and open documentation'
-	@echo '  yard-watch:  Generate and open documentation, regenerate on change'
 	@echo '  clean:       Remove *.gem, .yardoc/, doc/'
 
 .install: Gemfile Gemfile.lock arj.gemspec
@@ -56,8 +55,9 @@ rubocop-fix: .install
 
 .PHONY: precommit
 precommit: .install
-	@rspec --format progress
+	@COVERAGE=1 rspec --format progress
 	@rubocop
+	@yard
 
 .PHONY: watch
 watch: .install
@@ -70,11 +70,6 @@ yard: .install
 .PHONY: yard-open
 yard-open: yard
 	@if [[ `which open` ]]; then open ./doc/Arj.html; fi
-
-.PHONY: yard-watch
-yard-watch:
-	@if [[ `which open` ]]; then open ./doc/Arj.html; fi
-	@./script/rerun $(WATCH_FILES) -type f -- make yard
 
 .PHONY: clean
 clean:

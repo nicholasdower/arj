@@ -37,12 +37,13 @@ module Arj
       end
     end
 
-    # Executes any available jobs.
+    # Executes any available jobs. Returns +true+ if any jobs were executed, +false+ otherwise.
     def work_off
-      while execute_next; end
+      result = true while execute_next
+      result || false
     end
 
-    # Executes the next available job.
+    # Executes the next available job. Returns +true+ if a job was executed, +false+ otherwise.
     def execute_next
       @logger.info("#{description} - Looking for the next available job")
       if (job = @source.call)

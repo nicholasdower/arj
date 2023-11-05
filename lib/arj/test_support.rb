@@ -73,14 +73,24 @@ module Arj
       # Update via {.on_perform}.
       cattr_accessor :on_perform, default: {}
 
+      # Map of job ID to execution count. Used to retrieve the execution count for a job, even if it has been deleted or
+      # from an instance which has not been reloaded from the database.
+      cattr_accessor :global_executions, default: {}
+
       def self.perform_later(*args, **kwargs, &)
         proc = args[0].is_a?(Proc) ? args.shift : nil
         super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
       end
 
+      # Returns the total number of executions across all jobs.
+      def self.total_executions
+        Job.global_executions.values.sum
+      end
+
       # Clears {.on_perform}.
       def self.reset
         Job.on_perform = {}
+        Job.executions = {}
       end
 
       # Does one of the following:
@@ -90,6 +100,7 @@ module Arj
       #
       # @return [Array, Object, NilClass]
       def perform(*args, **kwargs) # rubocop:disable Lint/UnusedMethodArgument
+        Job.global_executions[job_id] = (Job.global_executions[job_id] || 0) + 1
         return Job.on_perform[job_id].call if Job.on_perform[job_id]
 
         raise(args[0], args[1] || 'error') if args[0].is_a?(Class) && args[0] < Exception
@@ -107,6 +118,12 @@ module Arj
       # Sets a +Proc+ which will be invoked by {#perform}.
       def on_perform(&block)
         Job.on_perform[job_id] = block
+      end
+
+      # Returns the total number of executions for this job, even if this instance has not been reloaded from the
+      # database. Useful, for instance when a job has been deleted and only a reference to the original job exists.
+      def global_executions
+        Job.global_executions[job_id] || 0
       end
     end
   end
