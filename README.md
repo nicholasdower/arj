@@ -86,8 +86,9 @@ Arj.where(queue_name: 'foo') # Jobs in the foo queue
 Optionally, query methods can also be added to job classes:
 
 ```ruby
+
 class SampleJob < ActiveJob::Base
-  include Arj::QueryMethods
+  include Arj::Query
 end
 ```
 
@@ -209,18 +210,15 @@ end
 
 The following sample jobs are provided for use in tests:
 
-- `Test::Job`
-- `Test::JobWithPersistence`
-- `Test::JobWithQuery`
-- `Test::JobWithRetry`
+- `Arj::Test::Job`
 
 To test job failures:
 
 ```ruby
-Arj::Test::JobWithRetry.perform_later(StandardError)
+Arj::Test::Job.perform_later(StandardError)
 ```
 
 To test retries:
 ```ruby
-Arj::Test::JobWithRetry.perform_later(Arj::Test::Error)
+Arj::Test::Job.perform_later(Arj::Test::Error)
 ```

@@ -2,61 +2,96 @@
 
 require 'active_job/base'
 require_relative 'persistence'
-require_relative 'query_methods'
+require_relative 'query'
 
 module Arj
   # Arj testing module. Provides job classes for use in tests.
   #
   # See:
-  # - {Error} - A test error which, when raised from {JobWithRetry}, will cause the job to be retried.
-  # - {Base} - The base class for test jobs.
-  # - {Job} - A test job.
-  # - {JobWithPersistence} - A {Job} which includes the {Persistence} module.
-  # - {JobWithQuery} - A {Job} which includes the {QueryMethods} module.
-  # - {JobWithRetry} - A {Job} which retries on {Error}.
+  # - {Job}   - A test job.
+  # - {Error} - A test error which, when raised from a test job, will cause the job to be retried.
   module Test
-    include QueryMethods
+    include Query
 
-    # Overrides {QueryMethods::ClassMethods.all} to provide a scope for all test jobs.
+    # Overrides {Query::ClassMethods.all} to provide a scope for test jobs.
     #
     # Example usage:
     #   Arj::Test::Job.perform_later
-    #   Arj::Test::JobWithPersistence.perform_later
-    #   Arj::Test::JobWithQuery.perform_later
-    #   Arj::Test::JobWithRetry.perform_later
     #
     #   Arj::Test.available.first            # Returns next available test job
     #   Arj::Test.where(executions: 0).count # Returns the number of test jobs which have never been executed.
     def self.all
-      Arj.where(job_class: [Job, JobWithQuery, JobWithPersistence, JobWithRetry].map(&:name))
+      Arj.where(job_class: [Job].map(&:name))
     end
 
-    # A test error which, when raised from {JobWithRetry}, will cause the job to be retried.
+    # A test error which, when raised from a test job, will cause the job to be retried.
     class Error < StandardError; end
 
-    # The base class for test jobs.
+    # A test job which does one of the following:
+    # - If the first argument is an +Exception+, raises it, using the second argument (if given) as the message.
+    # - If the first argument is a +Proc+, invokes it and returns the result.
+    # - Otherwise, returns the specified argument(s).
     #
-    # Subclasses:
-    # - {Job}
-    # - {JobWithPersistence}
-    # - {JobWithQuery}
-    # - {JobWithRetry}
-    class Base < ActiveJob::Base
-      # Returns the specified argument(s) or raises if an error class is specified.
+    # Example usage:
+    #   # Do nothing
+    #   job = Arj::Test::Job.perform_later('some arg')
+    #   job.perform_now # returns nil
+    #
+    #   # Return a value
+    #   job = Arj::Test::Job.perform_later('some arg')
+    #   job.perform_now # returns 'some arg'
+    #
+    #   # Return multiple values
+    #   job = Arj::Test::Job.perform_later('some arg', 'other arg')
+    #   job.perform_now # returns ['some arg', 'other arg']
+    #
+    #   # Raise an error
+    #   job = Arj::Test::Job.perform_later(StandardError)
+    #   job.perform_now # raises StandardError.new
+    #
+    #   # Raise an error with a message
+    #   job = Arj::Test::Job.perform_later(StandardError, 'oh, hi')
+    #   job.perform_now # raises StandardError.new('oh, hi')
+    #
+    #   # Cause a retry
+    #   job = Arj::Test::JobWithRetry.perform_later(Arj::Test::Error)
+    #   job.perform_now # re-enqueues and returns an Arj::Test::Error
+    #
+    #   # Override perform
+    #   job = Arj::Test::Job.perform_later(-> { 'some val' })
+    #   job.perform_now # returns 'some val'
+    #   job.on_perform { 'other val' }
+    #   job.perform_now # returns 'other val'
+    class Job < ActiveJob::Base
+      retry_on Arj::Test::Error, wait: 1.minute, attempts: 2
+
+      include Query
+      include Persistence
+
+      # Map of job ID to +perform+ {Proc}. Set by specifying a {Proc} as the first argument.
       #
-      # Example usage:
-      #   job = Arj::Test::Job.perform_later('some arg')
-      #   job.perform_now
+      # Update via {.on_perform}.
+      cattr_accessor :on_perform, default: {}
+
+      def self.perform_later(*args, **kwargs, &)
+        proc = args[0].is_a?(Proc) ? args.shift : nil
+        super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
+      end
+
+      # Clears {.on_perform}.
+      def self.reset
+        Job.on_perform = {}
+      end
+
+      # Does one of the following:
+      # - If the first argument is an +Exception+, raises it, using the second argument (if given) as the message.
+      # - If the first argument is a +Proc+, invokes it and returns the result.
+      # - Otherwise, returns the specified argument(s).
       #
-      #   job = Arj::Test::Job.perform_later(StandardError)
-      #   job.perform_now
-      #
-      #   job = Arj::Test::Job.perform_later(StandardError, 'oh, hi')
-      #   job.perform_now
-      #
-      # @raise the first arguments, if it is an Exception
       # @return [Array, Object, NilClass]
       def perform(*args, **kwargs) # rubocop:disable Lint/UnusedMethodArgument
+        return Job.on_perform[job_id].call if Job.on_perform[job_id]
+
         raise(args[0], args[1] || 'error') if args[0].is_a?(Class) && args[0] < Exception
 
         case arguments.size
@@ -68,50 +103,11 @@ module Arj
           arguments
         end
       end
-    end
 
-    # A test job.
-    #
-    # Example usage:
-    #   job = Arj::Test::Job.perform_later('some arg')
-    #   job.perform_now
-    #
-    #   job = Arj::Test::Job.perform_later(StandardError)
-    #   job.perform_now
-    #
-    #   job = Arj::Test::Job.perform_later(StandardError, 'oh, hi')
-    #   job.perform_now
-    class Job < Base; end
-
-    # A {Job} which includes the {Persistence} module.
-    #
-    # Example usage:
-    #   job = Arj::Test::JobWithPersistence.perform_later('some arg')
-    #   job.update!(queue_name: 'some queue')
-    class JobWithPersistence < Job
-      include Persistence
-    end
-
-    # A {Job} which includes the {QueryMethods} module.
-    #
-    # Example usage:
-    #   Arj::Test::JobWithQuery.set(queue_name: 'some queue').perform_later('some arg')
-    #   job = job.where(queue_name: 'some queue').first
-    #   job.perform_now
-    class JobWithQuery < Job
-      include QueryMethods
-    end
-
-    # A {Job} which retries on {Error}.
-    #
-    # Example usage:
-    #   job = Arj::Test::JobWithRetry.perform_later(Arj::Test::Error)
-    #   job.perform_now
-    #
-    #   job = Arj::Test::JobWithRetry.perform_later(Arj::Test::Error, 'oh, hi')
-    #   job.perform_now
-    class JobWithRetry < Job
-      retry_on Arj::Test::Error, wait: 1.minute, attempts: 2
+      # Sets a +Proc+ which will be invoked by {#perform}.
+      def on_perform(&block)
+        Job.on_perform[job_id] = block
+      end
     end
   end
 end

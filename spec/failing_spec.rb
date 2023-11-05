@@ -32,7 +32,7 @@ describe 'failing' do
       end
 
       context 'when error is retryable' do
-        subject { Arj::Test::JobWithRetry.perform_now(Arj::Test::Error, 'error') }
+        subject { Arj::Test::Job.perform_now(Arj::Test::Error, 'error') }
 
         it 'does not raise' do
           expect { subject }.not_to raise_error
@@ -55,7 +55,7 @@ describe 'failing' do
 
     let(:job) { original_job }
     let(:original_job) { enqueue }
-    let(:enqueue) { Arj::Test::JobWithRetry.perform_later(error, 'error') }
+    let(:enqueue) { Arj::Test::Job.perform_later(error, 'error') }
 
     before { enqueue }
 

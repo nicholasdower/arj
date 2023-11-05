@@ -8,7 +8,7 @@ module Arj
   #
   # Example usage:
   #   class SampleJob < ActiveJob::Base
-  #     include Arj::QueryMethods
+  #     include Arj::Query
   #   end
   #
   #   SampleJob.set(queue_name: 'some queue').perform_later('some arg')
@@ -24,13 +24,13 @@ module Arj
   #   job = Arj.where(queue_name: 'some queue').first
   #   job.perform_now
   #
-  # Note that all query methods delegate to {QueryMethods::ClassMethods.all}. Override {QueryMethods::ClassMethods.all}
+  # Note that all query methods delegate to {Query::ClassMethods.all}. Override {Query::ClassMethods.all}
   # to customize. For instance, to create a job group:
   #   class FooBarJob < ActiveJob::Base; end
   #   class FooBazJob < ActiveJob::Base; end
   #
   #   module FooJobs
-  #     include Arj::QueryMethods
+  #     include Arj::Query
   #
   #     def self.all
   #       Arj.where(job_class: [FooBarJob, FooBazJob].map(&:name))
@@ -40,8 +40,8 @@ module Arj
   #   FooBarJob.perform_later
   #   FooBazJob.perform_later
   #   FooJobs.available.first # Returns the first available job of type FooBarJob or FooBazJob.
-  module QueryMethods
-    # Class methods which are automatically added when {QueryMethods} is included in a class.
+  module Query
+    # Class methods which are automatically added when {Query} is included in a class.
     module ClassMethods
       delegate(*ActiveRecord::Querying::QUERYING_METHODS, to: :all)
 

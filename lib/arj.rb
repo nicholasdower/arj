@@ -3,7 +3,7 @@
 require 'active_record'
 require_relative 'arj_adapter'
 require_relative 'arj/persistence'
-require_relative 'arj/query_methods'
+require_relative 'arj/query'
 require_relative 'arj/relation'
 require_relative 'arj/version'
 require_relative 'arj/worker'
@@ -12,13 +12,13 @@ require_relative 'arj/worker'
 #
 # The Arj module provides:
 # - Global Arj settings {record_class} and {base_classes}.
-# - Job query methods. See {Arj::QueryMethods}.
+# - Job query methods. See {Arj::Query}.
 # - Job persistence methods similar to {Arj::Persistence}.
 module Arj
   @record_class = 'Job'
   @base_classes = %w[ApplicationJob]
 
-  include QueryMethods
+  include Query
 
   class << self
     # The Class used to interact with jobs in the database. Defaults to +Job+.
@@ -44,7 +44,7 @@ module Arj
     # For instance, given the following classes:
     #
     #   class ApplicationJob < ActiveJob::Base
-    #     include Arj::QueryMethods
+    #     include Arj::Query
     #   end
     #
     #   class BaseJob < ApplicationJob
