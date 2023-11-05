@@ -55,6 +55,10 @@ class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
   def self.up
     add_column :jobs, :last_error, :text
   end
+
+  def self.down
+    remove_column :jobs, :last_error
+  end
 end
 
 class TestDb
@@ -63,22 +67,15 @@ class TestDb
   def self.create
     raise 'connection already established' if @connected
 
-    destroy
+    self.destroy
     @connected = true
     ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: FILE)
     CreateJobs.migrate(:up)
   end
 
-  def self.add_shard
-    raise 'connection not established' unless @connected
-
-    AddShardToJobs.migrate(:up)
-  end
-
-  def self.remove_shard
-    raise 'connection not established' unless @connected
-
-    AddShardToJobs.migrate(:down)
+  def self.migrate(migration, direction)
+    migration.migrate(direction)
+    Job.reset_column_information
   end
 
   def self.destroy
@@ -87,8 +84,8 @@ class TestDb
   end
 
   def self.reset
-    destroy
-    create
+    self.destroy
+    self.create
   end
 
   def self.clear

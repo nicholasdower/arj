@@ -8,9 +8,10 @@ module Arj
   # Arj testing module. Provides job classes for use in tests.
   #
   # See:
-  # - {Job}          - A test job.
-  # - {Error}        - A test error which, when raised from a test job, will cause the job to be retried.
-  # - {JobWithShard} - A test job with an added shard column.
+  # - {Job}              - A test job.
+  # - {Error}            - A test error which, when raised from a test job, will cause the job to be retried.
+  # - {JobWithShard}     - A test job with an added +shard+ column.
+  # - {JobWithLastError} - A test job with an added +last_error+ column.
   module Test
     include Query
 
@@ -139,9 +140,14 @@ module Arj
       end
     end
 
-    # A {Job} with a shard attribute. See {Arj::Extensions::Shard}.
+    # A {Job} with a +shard+ attribute. See {Arj::Extensions::Shard}.
     class JobWithShard < Arj::Test::Job
       include Arj::Extensions::Shard
+    end
+
+    # A {Job} with a +last_error+ attribute. See {Arj::Extensions::LastError}.
+    class JobWithLastError < Arj::Test::Job
+      include Arj::Extensions::LastError
     end
   end
 end

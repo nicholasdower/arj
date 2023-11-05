@@ -4,14 +4,12 @@ require_relative '../../spec_helper'
 
 describe Arj::Extensions::Shard do
   before do
-    TestDb.add_shard
+    TestDb.migrate(AddShardToJobs, :up)
     stub_const('Arj::JobWithShard', Class.new(ActiveJob::Base))
     Arj::JobWithShard.include(Arj::Extensions::Shard)
   end
 
-  after do
-    TestDb.remove_shard
-  end
+  after { TestDb.migrate(AddShardToJobs, :down) }
 
   context 'serialization' do
     context 'when shard is set during creation' do
@@ -42,7 +40,7 @@ describe Arj::Extensions::Shard do
     context 'when a job class without a shard is persisted' do
       subject { Arj::Test::Job.perform_later }
 
-      it 'persists shard to the database' do
+      it 'successfully persists to the database' do
         expect { subject }.to change(Job, :count).from(0).to(1)
       end
     end

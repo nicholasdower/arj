@@ -2,16 +2,22 @@
 
 module Arj
   module Extensions
-    # Adds a shard attribute to a job.
+    # Adds a +shard+ attribute to a job class.
     #
     # Example usage:
+    #   class AddShardToJobs < ActiveRecord::Migration[7.1]
+    #     def change
+    #       add_column :jobs, :shard, :string
+    #     end
+    #   end
+    #
     #   class SampleJob < ActiveJob::Base
     #     include Arj::Extensions::Shard
     #   end
     #
     #   SampleJob.set(shard: 'some shard').perform_later
     module Shard
-      # Shard [String].
+      # An optional String representing a shard.
       attr_accessor :shard
 
       # Overridden to add support for setting the +shard+ attribute.

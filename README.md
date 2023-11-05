@@ -166,31 +166,11 @@ class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Configure retries and override `#serialize` and `#deserialize`:
+Include the last error extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  attr_accessor :last_error
-
-  retry_on Exception
-
-  def set(options = nil)
-    super
-    if (error = options[:error])
-      backtrace = error.backtrace&.map { |line| "\t#{line}" }&.join("\n")
-      error = backtrace ? "#{error.class}: #{error.message}\n#{backtrace}" : "#{error.class}: #{error.message}"
-
-      @last_error = error&.truncate(65535, omission: '… (truncated)')
-    end
-  end
-
-  def serialize
-    super.merge('last_error' => @last_error)
-  end
-
-  def deserialize_record(record)
-    super.tap { @last_error = record.last_error }
-  end
+  include Arj::Extensions::LastError
 end
 ```
 
@@ -199,14 +179,18 @@ end
 The following sample jobs are provided for use in tests:
 
 - `Arj::Test::Job`
+- `Arj::Test::JobWithShard`
+- `Arj::Test::JobWithLastError`
 
 To test job failures:
 
 ```ruby
-Arj::Test::Job.perform_later(StandardError)
+job = Arj::Test::Job.perform_later(StandardError)
+job.perform_now
 ```
 
 To test retries:
 ```ruby
-Arj::Test::Job.perform_later(Arj::Test::Error)
+job = Arj::Test::Job.perform_later(Arj::Test::Error)
+job.perform_now
 ```
