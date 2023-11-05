@@ -23,4 +23,4 @@ jobs:
           RELEASE_TYPE: ${{ inputs.type }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
-        run: ./scripts/release
+        run: ./script/release
