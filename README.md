@@ -140,30 +140,18 @@ class AddShardToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Override `#set`, `#serialize` and `#deserialize`:
+Include the shard extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  attr_accessor :shard
-
-  def set(options = {})
-    super.tap { @shard = options[:shard] if options.key?(:shard) }
-  end
-
-  def serialize
-    super.merge('shard' => @shard)
-  end
-
-  def deserialize(record)
-    super.tap { @shard = record.shard }
-  end
+  include Arj::Extensions::Shard
 end
 ```
 
 Usage:
 
 ```ruby
-SampleJob.set(shard: 22).perform_later('foo')
+SampleJob.set(shard: 'some shard').perform_later('foo')
 ```
 
 ### Adding a last error column

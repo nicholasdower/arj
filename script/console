@@ -62,8 +62,8 @@ Pry::Commands.add_command(LevelCommand)
 Pry.config.pager = false
 
 begin
-  Db.reset
+  TestDb.reset
   Pry.start
 ensure
-  Db.destroy
+  TestDb.destroy
 end

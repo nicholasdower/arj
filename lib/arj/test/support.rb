@@ -1,15 +1,16 @@
 # frozen_string_literal: true
 
 require 'active_job/base'
-require_relative 'persistence'
-require_relative 'query'
+require_relative '../persistence'
+require_relative '../query'
 
 module Arj
   # Arj testing module. Provides job classes for use in tests.
   #
   # See:
-  # - {Job}   - A test job.
-  # - {Error} - A test error which, when raised from a test job, will cause the job to be retried.
+  # - {Job}          - A test job.
+  # - {Error}        - A test error which, when raised from a test job, will cause the job to be retried.
+  # - {JobWithShard} - A test job with an added shard column.
   module Test
     include Query
 
@@ -68,18 +69,18 @@ module Arj
       include Query
       include Persistence
 
-      # Map of job ID to +Proc+ invoked in +perform+. Set by specifying a +Proc+ as the first argument.
+      # [Hash] of job ID to +Proc+ invoked in +perform+. Set by specifying a +Proc+ as the first argument.
       #
       # Update via {.on_perform}.
       cattr_accessor :on_perform, default: {}
 
-      # Map of job ID to execution count. Used to retrieve the execution count for a job, even if it has been deleted or
-      # from an instance which has not been reloaded from the database.
+      # [Hash] of job ID to execution count. Used to retrieve the execution count for a job, even if it has been deleted
+      # or from an instance which has not been reloaded from the database.
       cattr_accessor :global_executions, default: {}
 
       # Overridden to add support for +Proc+ arguments.
       #
-      # @return [ActiveJob::Base]
+      # @return [Arj::Test::Job, FalseClass]
       def self.perform_later(*args, **kwargs, &)
         proc = args[0].is_a?(Proc) ? args.shift : nil
         super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
@@ -136,6 +137,11 @@ module Arj
       def global_executions
         Job.global_executions[job_id] || 0
       end
+    end
+
+    # A {Job} with a shard attribute. See {Arj::Extensions::Shard}.
+    class JobWithShard < Arj::Test::Job
+      include Arj::Extensions::Shard
     end
   end
 end

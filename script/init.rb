@@ -39,13 +39,25 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.timestamps
     end
   end
+end
+
+class AddShardToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    add_column :jobs, :shard, :string
+  end
 
   def self.down
-    drop_table :jobs
+    remove_column :jobs, :shard
   end
 end
 
-class Db
+class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    add_column :jobs, :last_error, :text
+  end
+end
+
+class TestDb
   FILE = '.test.db'
 
   def self.create
@@ -55,6 +67,18 @@ class Db
     @connected = true
     ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: FILE)
     CreateJobs.migrate(:up)
+  end
+
+  def self.add_shard
+    raise 'connection not established' unless @connected
+
+    AddShardToJobs.migrate(:up)
+  end
+
+  def self.remove_shard
+    raise 'connection not established' unless @connected
+
+    AddShardToJobs.migrate(:down)
   end
 
   def self.destroy

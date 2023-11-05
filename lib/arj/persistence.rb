@@ -93,10 +93,11 @@ module Arj
 
         job.successfully_enqueued = true
         job_data = job_data(record)
-        job.deserialize(job_data)
 
         # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
         job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
+
+        job.deserialize(job_data)
 
         job
       end
@@ -106,7 +107,7 @@ module Arj
       # @return [Hash]
       def job_data(record)
         record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
-        job_data = record.attributes.slice(*REQUIRED_RECORD_ATTRIBUTES)
+        job_data = record.attributes
         job_data['arguments'] = JSON.parse(job_data['arguments'])
         job_data['provider_job_id'] = record.id
         job_data['exception_executions'] = JSON.parse(job_data['exception_executions'])
@@ -121,7 +122,6 @@ module Arj
       def record_attributes(job)
         serialized = job.serialize
         serialized.fetch_values(*REQUIRED_JOB_ATTRIBUTES)
-        serialized.slice!(*REQUIRED_JOB_ATTRIBUTES)
         serialized.delete('provider_job_id')
         serialized['arguments'] = serialized['arguments'].to_json
         serialized['exception_executions'] = serialized['exception_executions'].to_json

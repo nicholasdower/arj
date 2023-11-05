@@ -16,15 +16,15 @@ Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
 
 RSpec.configure do |config|
   config.before(:suite) do
-    Db.create
+    TestDb.create
   end
 
   config.after(:suite) do
-    Db.destroy
+    TestDb.destroy
   end
 
   config.before do
-    Db.clear
+    TestDb.clear
     Timecop.freeze
   end
 
