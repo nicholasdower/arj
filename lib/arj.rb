@@ -2,6 +2,7 @@
 
 require 'active_record'
 require_relative 'arj_adapter'
+require_relative 'arj/extensions'
 require_relative 'arj/persistence'
 require_relative 'arj/query'
 require_relative 'arj/relation'
