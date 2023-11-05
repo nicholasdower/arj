@@ -74,12 +74,13 @@ module Arj
       # Returns a job object for the specified database record. If a job is specified, it is updated from the record.
       def from_record(record, job = nil)
         raise "expected #{Arj.record_class}, found #{record.class}" unless record.is_a?(Arj.record_class)
+        raise "expected #{record.job_class}, found #{job.class}" if job && job.class.name != record.job_class
 
         job ||= Object.const_get(record.job_class).new
         raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
         if job.provider_job_id && job.provider_job_id != record.id
-          raise "unexpected id for #{job.class}: #{record.id} vs. #{job.provider_job_id}"
+          raise ArgumentError, "unexpected id for #{job.class}: #{record.id} vs. #{job.provider_job_id}"
         end
 
         job.successfully_enqueued = true

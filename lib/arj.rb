@@ -10,13 +10,14 @@ require_relative 'arj/worker'
 
 # Arj. An ActiveJob queuing backend which uses ActiveRecord.
 #
+# For more information about Arj, see https://github.com/nicholasdower/arj.
+#
 # The Arj module provides:
-# - Global Arj settings {record_class} and {base_classes}.
+# - Access to the global Arj setting {record_class}.
 # - Job query methods. See {Arj::Query}.
 # - Job persistence methods similar to {Arj::Persistence}.
 module Arj
   @record_class = 'Job'
-  @base_classes = %w[ApplicationJob]
 
   include Query
 
@@ -37,30 +38,6 @@ module Arj
 
       @record_class = clazz
     end
-
-    # List of names of job classes which should be considered base classes for the purposes of querying. Defaults to
-    # +"ApplicationJob"+.
-    #
-    # For instance, given the following classes:
-    #
-    #   class ApplicationJob < ActiveJob::Base
-    #     include Arj::Query
-    #   end
-    #
-    #   class BaseJob < ApplicationJob
-    #     Arj.base_classes << name
-    #   end
-    #
-    #   class ChildJob < BaseJob; end
-    #
-    # Querying via these classes would produce the following results:
-    #
-    #   ApplicationJob.last # Returns the last job, regardless of type
-    #   BaseJob.last        # Returns the last job, regardless of type
-    #   ChildJob.last       # Returns the last job of type ChildJob
-    #
-    # @return [Array<String>]
-    attr_reader :base_classes
 
     # @return [Boolean] +true+ if the specified job has a corresponding record in the database
     def exists?(job)
@@ -138,7 +115,7 @@ module Arj
     def destroyed?(job)
       raise 'record not set' if job.provider_job_id.nil?
 
-      exists?(job)
+      !exists?(job)
     end
   end
 end

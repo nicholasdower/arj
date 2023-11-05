@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'spec_helper'
+require_relative '../spec_helper'
 
 describe Arj::Worker do
   let(:worker) { Arj::Worker.new }
@@ -103,6 +103,60 @@ describe Arj::Worker do
 
       it 'returns true' do
         expect(subject).to eq(true)
+      end
+    end
+  end
+
+  context '#start' do
+    subject { worker.start }
+
+    context 'when there are no available jobs' do
+      before do
+        iterations = 0
+        allow(worker).to receive(:sleep) do
+          raise Interrupt if (iterations += 1) == 2
+        end
+      end
+
+      it 'sleeps every 5 seconds' do
+        expect(worker).to receive(:sleep).with(5).exactly(2).times
+        expect { subject }.to raise_error(Interrupt)
+      end
+    end
+
+    context 'when existing jobs become available' do
+      before do
+        Arj::Test::Job.set(wait: 5.seconds).perform_later(Time.zone.now)
+
+        iterations = 0
+        allow(worker).to receive(:sleep) do |duration|
+          Timecop.travel(duration.seconds)
+          expect(Arj::Test::Job.total_executions).to eq(iterations)
+
+          raise Interrupt if (iterations += 1) == 2
+        end
+      end
+
+      it 'executes the available jobs' do
+        expect(worker).to receive(:sleep).with(5).exactly(2).times
+        expect { subject }.to raise_error(Interrupt)
+      end
+    end
+
+    context 'when new jobs are enqueued' do
+      before do
+        iterations = 0
+        allow(worker).to receive(:sleep) do |duration|
+          Timecop.travel(duration.seconds)
+          expect(Arj::Test::Job.total_executions).to eq(iterations)
+          iterations += 1
+          iterations == 2 ? raise(Interrupt) : Arj::Test::Job.perform_later
+        end
+      end
+
+      it 'executes the new jobs' do
+        expect(worker).to receive(:sleep).with(5).exactly(2).times
+        expect { subject }.to raise_error(Interrupt)
       end
     end
   end

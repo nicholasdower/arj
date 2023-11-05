@@ -89,8 +89,8 @@ module Arj
 
       # Clears {.on_perform}.
       def self.reset
-        Job.on_perform = {}
-        Job.executions = {}
+        Job.on_perform.clear
+        Job.global_executions.clear
       end
 
       # Does one of the following:

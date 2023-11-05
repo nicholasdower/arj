@@ -49,7 +49,7 @@ module Arj
       def all
         raise 'no record class configured' unless Arj.record_class
 
-        if self == Arj || Arj.base_classes.include?(name)
+        if self == Arj
           Relation.new(Arj.record_class.all)
         else
           Relation.new(Arj.record_class.where(job_class: name).all)

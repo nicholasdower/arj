@@ -30,5 +30,6 @@ RSpec.configure do |config|
 
   config.after do
     Timecop.return
+    Arj::Test::Job.reset
   end
 end

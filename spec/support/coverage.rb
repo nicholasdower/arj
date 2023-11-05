@@ -8,5 +8,7 @@ if ENV['COVERAGE'] == '1'
     [SimpleCov::Formatter::HTMLFormatter, SimpleCov::Formatter::Console]
   )
 
-  SimpleCov.start
+  SimpleCov.start do
+    add_filter 'script/'
+  end
 end

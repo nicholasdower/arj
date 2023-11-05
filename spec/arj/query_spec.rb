@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require 'pp'
-require_relative 'spec_helper'
+require_relative '../spec_helper'
 
-describe 'querying' do
-  context 'single job return type' do
+describe Arj::Query do
+  context 'Arj.last' do
     subject { Arj.last }
 
     let(:set_options) { {} }
@@ -91,6 +91,19 @@ describe 'querying' do
     end
   end
 
+  context 'Arj.pluck' do
+    subject { Arj.pluck(:queue_name) }
+
+    before do
+      Arj::Test::Job.set(queue: 'one').perform_later
+      Arj::Test::Job.set(queue: 'two').perform_later
+    end
+
+    it 'returns the plucked values' do
+      expect(subject).to eq(%w[one two])
+    end
+  end
+
   context '.pretty_inspect' do
     before { Arj::Test::Job.perform_later(1) }
 
@@ -98,6 +111,39 @@ describe 'querying' do
 
     it 'returns Arj jobs representations' do
       expect(subject).to start_with('[#<Arj::Test::Job:')
+    end
+  end
+
+  context 'class including Query' do
+    subject { Arj::SampleJob.all.to_a }
+
+    before do
+      stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
+      Arj::SampleJob.class_eval do
+        include Arj::Query
+      end
+      Arj::Test::Job.perform_later('some arg')
+      Arj::SampleJob.perform_later('some arg')
+    end
+
+    it 'queries for jobs with this class' do
+      expect(subject.size).to eq(1)
+      expect(subject.first).to be_a(Arj::SampleJob)
+    end
+
+    context 'when .all method is overridden' do
+      before do
+        Arj::SampleJob.class_eval do
+          def self.all
+            Arj.where(job_class: Arj::Test::Job.name)
+          end
+        end
+      end
+
+      it 'uses the the custom all method' do
+        expect(subject.to_a.size).to eq(1)
+        expect(subject.first).to be_a(Arj::Test::Job)
+      end
     end
   end
 end

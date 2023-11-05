@@ -14,6 +14,13 @@ describe 'enqueueing' do
       expect { subject }.to change(Job, :count).from(0).to(1)
     end
 
+    context 'when neither wait nor wait_until specified' do
+      it 'does not set scheduled_at' do
+        subject
+        expect(Arj.last.scheduled_at).to be_nil
+      end
+    end
+
     context 'return value' do
       include_examples 'job fields', Arj::Test::Job
     end
@@ -25,6 +32,12 @@ describe 'enqueueing' do
     let(:options) { {} }
 
     before { Arj::Test::Job.perform_later }
+
+    context 'when neither wait nor wait_until specified' do
+      it 'does not set scheduled_at' do
+        expect { subject }.not_to change { Arj.last.scheduled_at }.from(nil)
+      end
+    end
 
     context 'when wait specified' do
       let(:options) { { wait: 1.hour } }
