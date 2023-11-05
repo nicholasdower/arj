@@ -13,9 +13,9 @@ For more information on ActiveJob, see:
 - [Querying](#querying)
 - [Persistence](#persistence)
 - [Worker](#worker)
-- [Customization Examples](#customization-examples)
-  * [Adding a shard column](#adding-a-shard-column)
-  * [Adding a last error column](#adding-a-last-error-column)
+- [Extensions](#extensions)
+  * [Last error](#last-error)
+  * [Shard](#shard)
 - [Testing](#testing)
 
 ## Setup

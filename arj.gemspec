@@ -12,7 +12,10 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Nick Dower']
   spec.email         = 'nicholasdower@gmail.com'
 
-  spec.metadata['rubygems_mfa_required'] = 'true'
+  spec.metadata      = {
+    'rubygems_mfa_required' => 'true',
+    'documentation_uri'     => 'https://www.rubydoc.info/github/nicholasdower/arj/master'
+  }
   spec.required_ruby_version = '>= 3.2.2'
 
   spec.files = Dir['lib/**/*']
