@@ -7,6 +7,8 @@ For more information on ActiveJob, see:
 - https://edgeguides.rubyonrails.org/active_job_basics.html
 - https://www.rubydoc.info/gems/activejob
 
+## Sections
+
 - [Setup](#setup)
 - [Querying](#querying)
 - [Persistence](#persistence)
@@ -77,7 +79,7 @@ ActiveJob::Base.queue_adapter = :arj
 The `Arj` module exposes ActiveRecord query methods which can be used to find jobs. For example:
 
 ```ruby
-Arj.count                    # Number of jobs.
+Arj.count                    # Number of jobs
 Arj.all                      # All jobs
 Arj.last                     # Last job by database id
 Arj.where(queue_name: 'foo') # Jobs in the foo queue
@@ -93,12 +95,23 @@ end
 ```
 
 ```ruby
-SampleJob.all                   # All SampleJobs
+SampleJob.all # All SampleJobs
 ```
 
 ## Persistence
 
-Optionally, persistence methods `reload`, `save!`, `destroy!`, `update!` and `update_job!` can be added to job classes:
+The `Arj` module exposes ActiveRecord-like persistence methods. For example:
+
+```ruby
+Arj.exists?(job)
+Arj.reload(job)
+Arj.save!(job)
+Arj.update!(job, attributes)
+Arj.destroy!(job)
+Arj.destroy?(job)
+```
+
+Optionally, these methods can be added to job classes:
 
 ```ruby
 class SampleJob < ActiveJob::Base
@@ -106,15 +119,22 @@ class SampleJob < ActiveJob::Base
 end
 ```
 
+And used like:
+
+```ruby
+job = SampleJob.perform_later
+job.update!(queue_name: 'some queue')
+```
+
 ## Worker
 
-Run all availble jobs using a worker:
+Execute all availble jobs using a worker:
 
 ```ruby
 Arj::Worker.new.work_off
 ```
 
-Start a worker which will run jobs as they become available:
+Start a worker which will execute jobs as they become available:
 
 ```ruby
 Arj::Worker.new.start
@@ -126,9 +146,9 @@ Start a job with custom criteria:
 Arj::Worker.new(description: 'Arj::Worker(first)', source: -> { Arj.first }).start
 ```
 
-## Customization Examples
+## Extensions
 
-### Adding a shard column
+### Shard
 
 Apply a migration:
 
@@ -154,7 +174,7 @@ Usage:
 SampleJob.set(shard: 'some shard').perform_later('foo')
 ```
 
-### Adding a last error column
+### Last error
 
 Apply a migration:
 
