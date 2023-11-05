@@ -5,7 +5,9 @@ require_relative 'persistence'
 require_relative '../arj'
 
 module Arj
-  # Wrapper for ActiveRecord::Relation which maps record objects to job objects.
+  # Wrapper for {ActiveRecord::Relation} which maps record objects to job objects.
+  #
+  # See {QueryMethods}
   class Relation
     def initialize(ar_relation)
       @ar_relation = ar_relation
@@ -33,8 +35,8 @@ module Arj
       end
     end
 
-    def respond_to_missing?(_)
-      true
+    def respond_to_missing?(*)
+      @ar_relation.respond_to?(*)
     end
 
     # Updates each matching job with the specified attributes.

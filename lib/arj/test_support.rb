@@ -12,9 +12,25 @@ module Arj
   # - {Base} - The base class for test jobs.
   # - {Job} - A test job.
   # - {JobWithPersistence} - A {Job} which includes the {Persistence} module.
-  # - {JobWithQuery} - A {Job} which includes the {Query} module.
+  # - {JobWithQuery} - A {Job} which includes the {QueryMethods} module.
   # - {JobWithRetry} - A {Job} which retries on {Error}.
   module Test
+    include QueryMethods
+
+    # Overrides {QueryMethods::ClassMethods.all} to provide a scope for all test jobs.
+    #
+    # Example usage:
+    #   Arj::Test::Job.perform_later
+    #   Arj::Test::JobWithPersistence.perform_later
+    #   Arj::Test::JobWithQuery.perform_later
+    #   Arj::Test::JobWithRetry.perform_later
+    #
+    #   Arj::Test.available.first            # Returns next available test job
+    #   Arj::Test.where(executions: 0).count # Returns the number of test jobs which have never been executed.
+    def self.all
+      Arj.where(job_class: [Job, JobWithQuery, JobWithPersistence, JobWithRetry].map(&:name))
+    end
+
     # A test error which, when raised from {JobWithRetry}, will cause the job to be retried.
     class Error < StandardError; end
 
@@ -76,7 +92,7 @@ module Arj
       include Persistence
     end
 
-    # A {Job} which includes the {Query} module.
+    # A {Job} which includes the {QueryMethods} module.
     #
     # Example usage:
     #   Arj::Test::JobWithQuery.set(queue_name: 'some queue').perform_later('some arg')

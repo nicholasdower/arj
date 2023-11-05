@@ -18,9 +18,9 @@ module Arj
   @record_class = 'Job'
   @base_classes = %w[ApplicationJob]
 
-  class << self
-    include QueryMethods::ClassMethods
+  include QueryMethods
 
+  class << self
     # The Class used to interact with jobs in the database. Defaults to +Job+.
     #
     # Note that if set to a String, will be lazily constantized.
@@ -61,34 +61,6 @@ module Arj
     #
     # @return [Array<String>]
     attr_reader :base_classes
-
-    # Returns the first available job.
-    #
-    # Jobs are ordered by:
-    # - +priority+ ascending, nulls last
-    # - +scheduled_at+ ascending, nulls last
-    #
-    # The following criteria may optionally be specified:
-    # - One or more job classes
-    # - One or more queues
-    # - The maximum number of executions (exclusive)
-    #
-    # @return [ActiveJob::Base]
-    def next(job_class: nil, queue_name: nil, max_executions: nil)
-      relation = Arj.where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
-      relation = relation.where(job_class:) if job_class
-      relation = relation.where(queue_name:) if queue_name
-      relation = relation.where('executions < ?', max_executions) if max_executions
-      relation = relation.order(
-        Arel.sql(
-          <<-SQL.squish
-            CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
-            CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at
-          SQL
-        )
-      )
-      relation.first
-    end
 
     # @return [Boolean] +true+ if the specified job has a corresponding record in the database
     def exists?(job)
