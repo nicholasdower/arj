@@ -64,6 +64,7 @@ echo "Updating lib/arj/version.rb"
 echo "# frozen_string_literal: true"  > lib/arj/version.rb
 echo                                 >> lib/arj/version.rb
 echo "module Arj"                    >> lib/arj/version.rb
+echo "  # The Arj version."          >> lib/arj/version.rb
 echo "  VERSION = '$new_version'"    >> lib/arj/version.rb
 echo "end"                           >> lib/arj/version.rb
 
