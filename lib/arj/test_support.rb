@@ -68,7 +68,7 @@ module Arj
       include Query
       include Persistence
 
-      # Map of job ID to +perform+ {Proc}. Set by specifying a {Proc} as the first argument.
+      # Map of job ID to +Proc+ invoked in +perform+. Set by specifying a +Proc+ as the first argument.
       #
       # Update via {.on_perform}.
       cattr_accessor :on_perform, default: {}
@@ -77,28 +77,34 @@ module Arj
       # from an instance which has not been reloaded from the database.
       cattr_accessor :global_executions, default: {}
 
+      # Overridden to add support for +Proc+ arguments.
+      #
+      # @return [ActiveJob::Base]
       def self.perform_later(*args, **kwargs, &)
         proc = args[0].is_a?(Proc) ? args.shift : nil
         super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
       end
 
       # Returns the total number of executions across all jobs.
+      #
+      # @return [Integer]
       def self.total_executions
         Job.global_executions.values.sum
       end
 
       # Clears {.on_perform}.
+      #
+      # @return [NilClass]
       def self.reset
         Job.on_perform.clear
         Job.global_executions.clear
+        nil
       end
 
       # Does one of the following:
       # - If the first argument is an +Exception+, raises it, using the second argument (if given) as the message.
       # - If the first argument is a +Proc+, invokes it and returns the result.
-      # - Otherwise, returns the specified argument(s).
-      #
-      # @return [Array, Object, NilClass]
+      # - Otherwise, returns the specified argument or arguments, or +nil+ if none were specified.
       def perform(*args, **kwargs) # rubocop:disable Lint/UnusedMethodArgument
         Job.global_executions[job_id] = (Job.global_executions[job_id] || 0) + 1
         return Job.on_perform[job_id].call if Job.on_perform[job_id]
@@ -116,12 +122,17 @@ module Arj
       end
 
       # Sets a +Proc+ which will be invoked by {#perform}.
+      #
+      # @return [NilClass]
       def on_perform(&block)
         Job.on_perform[job_id] = block
+        nil
       end
 
       # Returns the total number of executions for this job, even if this instance has not been reloaded from the
       # database. Useful, for instance when a job has been deleted and only a reference to the original job exists.
+      #
+      # @return [Integer]
       def global_executions
         Job.global_executions[job_id] || 0
       end

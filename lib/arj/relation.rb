@@ -38,6 +38,8 @@ module Arj
     end
 
     # Implemented to ensure Arj::Relation#method can be used to retrieve methods provided by ActiveRecord relations.
+    #
+    # @return [Boolean]
     def respond_to_missing?(*)
       @ar_relation.respond_to?(*)
     end

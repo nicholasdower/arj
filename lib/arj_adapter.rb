@@ -16,6 +16,9 @@ require_relative 'arj/persistence'
 #   ActiveJob::Base.queue_adapter = :arj
 class ArjAdapter
   # Enqueue a job for immediate execution.
+  #
+  # @param job [ActiveJob::Base] the job to enqueue
+  # @return [ActiveJob::Base] the enqueued job
   def enqueue(job)
     raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
@@ -23,6 +26,10 @@ class ArjAdapter
   end
 
   # Enqueue a job for execution at the specified time.
+  #
+  # @param job [ActiveJob::Base] the job to enqueue
+  # @param timestamp [Numeric, NilClass] optional number of seconds since Unix epoch at which to execute the job
+  # @return [ActiveJob::Base] the enqueued job
   def enqueue_at(job, timestamp)
     raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 

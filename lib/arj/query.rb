@@ -46,6 +46,8 @@ module Arj
       delegate(*ActiveRecord::Querying::QUERYING_METHODS, to: :all)
 
       # Returns a {Relation} scope object for all jobs.
+      #
+      # @return [Relation]
       def all
         raise 'no record class configured' unless Arj.record_class
 
@@ -75,6 +77,8 @@ module Arj
     end
 
     # Adds {ClassMethods} when this module is included.
+    #
+    # @return [Class]
     def self.included(clazz)
       clazz.extend ClassMethods
     end

@@ -42,6 +42,10 @@ module Arj
 
     class << self
       # Enqueues a job, optionally at the specified time.
+      #
+      # @param job [ActiveJob::Base] the job to enqueue
+      # @param timestamp [Numeric, NilClass] optional number of seconds since Unix epoch at which to execute the job
+      # @return [ActiveJob::Base] the enqueued job
       def enqueue(job, timestamp = nil)
         job.scheduled_at = timestamp ? Time.zone.at(timestamp) : nil
 
@@ -58,6 +62,8 @@ module Arj
       end
 
       # Updates the specified job with Arj-specific features.
+      #
+      # @return [ActiveJob::Base] the enhanced job
       def enhance(job)
         job.singleton_class.class_eval do
           def perform_now
@@ -72,6 +78,8 @@ module Arj
       end
 
       # Returns a job object for the specified database record. If a job is specified, it is updated from the record.
+      #
+      # @return [ActiveJob::Base]
       def from_record(record, job = nil)
         raise "expected #{Arj.record_class}, found #{record.class}" unless record.is_a?(Arj.record_class)
         raise "expected #{record.job_class}, found #{job.class}" if job && job.class.name != record.job_class
@@ -94,6 +102,8 @@ module Arj
       end
 
       # Returns serialized job data for the specified database record.
+      #
+      # @return [Hash]
       def job_data(record)
         record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
         job_data = record.attributes.slice(*REQUIRED_RECORD_ATTRIBUTES)
@@ -106,6 +116,8 @@ module Arj
       end
 
       # Returns database record attributes for the specified job.
+      #
+      # @return [Hash]
       def record_attributes(job)
         serialized = job.serialize
         serialized.fetch_values(*REQUIRED_JOB_ATTRIBUTES)

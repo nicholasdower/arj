@@ -10,13 +10,19 @@ module Arj
     DEFAULT_SLEEP_DELAY = 5.seconds
     private_constant :DEFAULT_SLEEP_DELAY
 
-    attr_reader :description, :sleep_delay
+    # A description for this worker, used in logs.
+    attr_reader :description
+
+    # Duration to sleep in {#start} after executing all available jobs, before retying.
+    attr_reader :sleep_delay
+
+    # Used to log worker progress.
     attr_accessor :logger
 
     # @param description [String] a description for this worker, used in logs
     # @param source [Proc] a job source
     # @param sleep_delay [ActiveSupport::Duration] sleep duration after executing all available jobs, defaults to 5s
-    # @param logger [Logger]
+    # @param logger [Logger] used to log worker progress
     def initialize(
       description: 'Arj::Worker(*)',
       source: -> { Arj.available.first },
@@ -38,12 +44,16 @@ module Arj
     end
 
     # Executes any available jobs. Returns +true+ if any jobs were executed, +false+ otherwise.
+    #
+    # @return [Boolean]
     def work_off
       result = true while execute_next
       result || false
     end
 
     # Executes the next available job. Returns +true+ if a job was executed, +false+ otherwise.
+    #
+    # @return [Boolean]
     def execute_next
       @logger.info("#{description} - Looking for the next available job")
       if (job = @source.call)
