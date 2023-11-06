@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    arj (0.0.3)
+    arj (0.0.4)
       activejob (~> 7.1)
       activerecord (~> 7.1)
 

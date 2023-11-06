@@ -1,3 +1,7 @@
+## 0.0.4
+
+- No changes.
+
 ## 0.0.3
 
 - No changes.
