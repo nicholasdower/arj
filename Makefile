@@ -24,6 +24,7 @@ help:
 	@echo '  yard:        Generate documentation'
 	@echo '  yard-open:   Generate and open documentation'
 	@echo '  clean:       Remove *.gem, .yardoc/, doc/'
+	@echo '  gem:         Build a gem'
 
 .install: Gemfile Gemfile.lock arj.gemspec
 	@make install
@@ -71,8 +72,15 @@ yard: .install
 yard-open: yard
 	@if [[ `which open` ]]; then open ./doc/Arj.html; fi
 
-.PHONY: clean
-clean:
+.PHONY: clean-gems
+clean-gems:
 	rm -rf *.gem
+
+.PHONY: clean
+clean: clean-gems
 	rm -rf .yardoc/
 	rm -rf doc/
+
+.PHONY: gem
+gem: clean-gems .install
+	gem build

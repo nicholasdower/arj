@@ -2,8 +2,8 @@ PATH
   remote: .
   specs:
     arj (0.0.0)
-      activejob (~> 7.0)
-      activerecord (~> 7.0)
+      activejob (~> 7.1)
+      activerecord (~> 7.1)
 
 GEM
   remote: http://rubygems.org/
