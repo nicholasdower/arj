@@ -124,4 +124,11 @@ curl \
   "https://uploads.github.com/repos/nicholasdower/arj/releases/$release_id/assets?name=$gem_file" \
   --data-binary @"$gem_file" > /dev/null
 
+echo 'Updating RubyDoc documentation'
+curl \
+  -X POST \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  'https://www.rubydoc.info/checkout' \
+  --data-ascii "scheme=git&url=https://github.com/nicholasdower/arj&commit=v$new_version"
+
 echo "Version v$new_version successfully released"
