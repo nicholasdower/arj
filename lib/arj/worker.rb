@@ -11,12 +11,18 @@ module Arj
     private_constant :DEFAULT_SLEEP_DELAY
 
     # A description for this worker, used in logs.
+    #
+    # @return [String]
     attr_reader :description
 
     # Duration to sleep in {#start} after executing all available jobs, before retying.
+    #
+    # @return [ActiveSupport::Duration]
     attr_reader :sleep_delay
 
     # Used to log worker progress.
+    #
+    # @return [Logger]
     attr_accessor :logger
 
     # @param description [String] a description for this worker, used in logs
@@ -36,6 +42,8 @@ module Arj
     end
 
     # Executes jobs as they become available.
+    #
+    # @return [void]
     def start
       loop do
         work_off

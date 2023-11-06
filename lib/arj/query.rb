@@ -67,6 +67,8 @@ module Arj
       # - One or more queues
       # - The maximum number of executions (exclusive)
       #
+      # @param queue_name [String, Array]
+      # @param max_executions [Numeric]
       # @return [ActiveJob::Base]
       def available(queue_name: nil, max_executions: nil)
         relation = where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
@@ -78,6 +80,7 @@ module Arj
 
     # Adds {ClassMethods} when this module is included.
     #
+    # @param clazz [Class]
     # @return [Class]
     def self.included(clazz)
       clazz.extend ClassMethods

@@ -18,19 +18,28 @@ module Arj
     #   SampleJob.set(shard: 'some shard').perform_later
     module Shard
       # An optional String representing a shard.
+      #
+      # @return [String]
       attr_accessor :shard
 
       # Overridden to add support for setting the +shard+ attribute.
+      #
+      # @param options [Hash]
+      # @return [ActiveJob::ConfiguredJob]
       def set(options = {})
         super.tap { @shard = options[:shard] if options.key?(:shard) }
       end
 
       # Overridden to add support for serializing the +shard+ attribute.
+      #
+      # @return [Hash]
       def serialize
         super.merge('shard' => @shard)
       end
 
       # Overridden to add support for deserializing the +shard+ attribute.
+      #
+      # @param job_data [Hash]
       def deserialize(job_data)
         super.tap { @shard = job_data['shard'] }
       end

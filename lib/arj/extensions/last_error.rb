@@ -21,9 +21,17 @@ module Arj
     #   job.perform_now               # raises
     #   job.last_error                # contains the stacktrace of the previous error
     module LastError
-      # A String representing the last error encountered during execution, if any.
-      attr_reader :last_error
+      # Returns a String representing the last error encountered during execution, if any.
+      #
+      # @return [String]
+      def last_error
+        @last_error
+      end
 
+      # Sets the last error.
+      #
+      # @param error [String, Exception]
+      # @return [String]
       def last_error=(error)
         unless error.nil? || error.is_a?(Exception) || error.is_a?(String)
           raise ArgumentError, "invalid error: #{error.class}"
@@ -38,6 +46,9 @@ module Arj
       end
 
       # Overridden to add support for setting the +last_error+ attribute.
+      #
+      # @param options [Hash]
+      # @return [ActiveJob::ConfiguredJob]
       def set(options = {})
         super.tap do
           self.last_error = options[:error] if options[:error]
@@ -45,11 +56,15 @@ module Arj
       end
 
       # Overridden to add support for serializing the +last_error+ attribute.
+      #
+      # @return [Hash]
       def serialize
         super.merge('last_error' => @last_error)
       end
 
       # Overridden to add support for deserializing the +last_error+ attribute.
+      #
+      # @param job_data [Hash]
       def deserialize(job_data)
         super.tap { @last_error = job_data['last_error'] }
       end

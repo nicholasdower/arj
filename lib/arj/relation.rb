@@ -15,6 +15,8 @@ module Arj
     end
 
     # Delegates to the wrapped ActiveRecord relation and maps record objects to job objects.
+    #
+    # @param method [Symbol]
     def method_missing(method, *, &)
       result = @ar_relation.send(method, *, &)
       case result
@@ -44,6 +46,7 @@ module Arj
 
     # Updates each matching job with the specified attributes.
     #
+    # @param attributes [Hash]
     # @return [Array<ActiveJob::Base>]
     def update_job!(attributes)
       to_a.map do |job|
@@ -70,6 +73,7 @@ module Arj
     #     @arguments=[],
     #     ...
     #
+    # @param pp [PP]
     # @return [NilClass]
     def pretty_print(pp)
       pp.pp(to_a)

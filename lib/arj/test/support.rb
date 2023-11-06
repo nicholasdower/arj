@@ -22,6 +22,8 @@ module Arj
     #
     #   Arj::Test.available.first            # Returns next available test job
     #   Arj::Test.where(executions: 0).count # Returns the number of test jobs which have never been executed.
+    #
+    # @return [Arj::Relation]
     def self.all
       Arj.where(job_class: [Job].map(&:name))
     end
@@ -70,37 +72,45 @@ module Arj
       include Query
       include Persistence
 
-      # [Hash] of job ID to +Proc+ invoked in +perform+. Set by specifying a +Proc+ as the first argument.
-      #
-      # Update via {.on_perform}.
-      cattr_accessor :on_perform, default: {}
+      @on_perform = {}
+      @global_executions = {}
+      class << self
+        # Mapping of job ID to +Proc+ invoked in +perform+. Set by specifying a +Proc+ as the first argument.
+        #
+        # Update via {.on_perform}.
+        #
+        # @return [Hash]
+        attr_accessor :on_perform
 
-      # [Hash] of job ID to execution count. Used to retrieve the execution count for a job, even if it has been deleted
-      # or from an instance which has not been reloaded from the database.
-      cattr_accessor :global_executions, default: {}
+        # Mapping of job ID to execution count. Used to retrieve the execution count for a job, even if it has been
+        # deleted or from an instance which has not been reloaded from the database.
+        #
+        # @return [Hash]
+        attr_accessor :global_executions
 
-      # Overridden to add support for +Proc+ arguments.
-      #
-      # @return [Arj::Test::Job, FalseClass]
-      def self.perform_later(*args, **kwargs, &)
-        proc = args[0].is_a?(Proc) ? args.shift : nil
-        super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
-      end
+        # Overridden to add support for +Proc+ arguments.
+        #
+        # @return [Arj::Test::Job, FalseClass]
+        def perform_later(*args, **kwargs, &)
+          proc = args[0].is_a?(Proc) ? args.shift : nil
+          super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
+        end
 
-      # Returns the total number of executions across all jobs.
-      #
-      # @return [Integer]
-      def self.total_executions
-        Job.global_executions.values.sum
-      end
+        # Returns the total number of executions across all jobs.
+        #
+        # @return [Integer]
+        def total_executions
+          Job.global_executions.values.sum
+        end
 
-      # Clears {.on_perform}.
-      #
-      # @return [NilClass]
-      def self.reset
-        Job.on_perform.clear
-        Job.global_executions.clear
-        nil
+        # Clears {.on_perform}.
+        #
+        # @return [NilClass]
+        def reset
+          Job.on_perform.clear
+          Job.global_executions.clear
+          nil
+        end
       end
 
       # Does one of the following:

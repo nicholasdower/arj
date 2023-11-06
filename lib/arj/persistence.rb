@@ -87,6 +87,7 @@ module Arj
 
       # Returns serialized job data for the specified database record.
       #
+      # @param record [ActiveRecord::Base]
       # @return [Hash]
       def job_data(record)
         record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
@@ -101,6 +102,7 @@ module Arj
 
       # Returns database record attributes for the specified job.
       #
+      # @param job [ActiveJob::Base]
       # @return [Hash]
       def record_attributes(job)
         serialized = job.serialize
@@ -133,6 +135,7 @@ module Arj
 
     # Updates the database record associated with this job. Raises if the record is invalid.
     #
+    # @param attributes [Hash]
     # @return [Boolean] +true+
     def update!(attributes)
       Arj.update!(self, attributes)

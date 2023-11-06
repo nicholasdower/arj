@@ -10,6 +10,8 @@ module Arj
   # database iff it was not re-enqueued.
   module Job
     # Overrides Active::Job#perform_now to ensure that successful jobs are removed from the queue.
+    #
+    # @return []ActiveJob::Base]
     def perform_now
       self.successfully_enqueued = false
       super

@@ -2,7 +2,10 @@
 
 An ActiveJob queuing backend which uses ActiveRecord. 
 
-For API docs, see: https://www.rubydoc.info/github/nicholasdower/arj
+API docs: https://www.rubydoc.info/github/nicholasdower/arj \
+RubyGems: https://rubygems.org/gems/arj \
+Changelog: https://github.com/nicholasdower/arj/releases \
+Issues: https://github.com/nicholasdower/arj/issues
 
 For more information on ActiveJob, see:
 
@@ -62,7 +65,9 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-If using Rails, configure the queue adapter:
+Configure the queue adapter.
+
+If using Rails:
 
 ```ruby
 class MyApplication < Rails::Application
@@ -70,7 +75,7 @@ class MyApplication < Rails::Application
 end
 ```
 
-If not using Rails, configure the queue adapter:
+If not using Rails:
 
 ```ruby
 ActiveJob::Base.queue_adapter = :arj
@@ -90,14 +95,28 @@ Arj.where(queue_name: 'foo') # Jobs in the foo queue
 Optionally, query methods can also be added to job classes:
 
 ```ruby
-
 class SampleJob < ActiveJob::Base
   include Arj::Query
 end
+
+SampleJob.all # All SampleJobs
 ```
 
+`:all` can be overridden to provide custom querying:
+
 ```ruby
-SampleJob.all # All SampleJobs
+class SampleJobOne < ActiveJob::Base; end
+class SampleJobTwo < ActiveJob::Base; end
+
+class SampleJobs
+  include Arj::Query
+
+  def self.all
+    Arj.where(job_class: [SampleJobOne, SampleJobTwo].map(&:name))
+  end
+end
+
+SampleJobs.where(priority: 0) # Jobs of type SampleJobOne or SampleJobTwo with a priority of 0
 ```
 
 ## Persistence
@@ -110,7 +129,7 @@ Arj.reload(job)
 Arj.save!(job)
 Arj.update!(job, attributes)
 Arj.destroy!(job)
-Arj.destroy?(job)
+Arj.destroyed?(job)
 ```
 
 Optionally, these methods can be added to job classes:
@@ -152,7 +171,7 @@ Arj::Worker.new(description: 'Arj::Worker(first)', source: -> { Arj.first }).sta
 
 ### Shard
 
-Apply a migration:
+To add a +shard+ attribute to jobs, first, apply a migration:
 
 ```ruby
 class AddShardToJobs < ActiveRecord::Migration[7.1]
@@ -162,7 +181,7 @@ class AddShardToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Include the shard extension:
+Next, include the shard extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
@@ -170,7 +189,7 @@ class SampleJob < ActiveJob::Base
 end
 ```
 
-Usage:
+Example usage:
 
 ```ruby
 SampleJob.set(shard: 'some shard').perform_later('foo')
@@ -178,7 +197,7 @@ SampleJob.set(shard: 'some shard').perform_later('foo')
 
 ### Last error
 
-Apply a migration:
+To add a +last_error+ attribute to jobs, first, apply a migration:
 
 ```ruby
 class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
@@ -188,7 +207,7 @@ class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Include the last error extension:
+Next, include the last error extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
@@ -200,9 +219,11 @@ end
 
 The following sample jobs are provided for use in tests:
 
-- `Arj::Test::Job`
-- `Arj::Test::JobWithShard`
-- `Arj::Test::JobWithLastError`
+```ruby
+Arj::Test::Job
+Arj::Test::JobWithShard
+Arj::Test::JobWithLastError
+```
 
 To test job failures:
 
