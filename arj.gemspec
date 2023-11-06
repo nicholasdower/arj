@@ -16,8 +16,8 @@ Gem::Specification.new do |spec|
   spec.metadata      = {
     'bug_tracker_uri'       => 'https://github.com/nicholasdower/arj/issues',
     'changelog_uri'         => "https://github.com/nicholasdower/arj/releases/tag/v#{Arj::VERSION}",
-    'documentation_uri'     => 'https://www.rubydoc.info/github/nicholasdower/arj',
-    'homepage_uri'       => 'https://github.com/nicholasdower/arj',
+    'documentation_uri'     => "https://www.rubydoc.info/github/nicholasdower/arj/v#{Arj::VERSION}",
+    'homepage_uri'          => 'https://github.com/nicholasdower/arj',
     'rubygems_mfa_required' => 'true',
     'source_code_uri'       => 'https://github.com/nicholasdower/arj'
   }
