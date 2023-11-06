@@ -1,3 +1,7 @@
+## 0.0.5
+
+- Added Arj::Job, a module prepended to enqueued jobs.
+
 ## 0.0.4
 
 - No changes.
