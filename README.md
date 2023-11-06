@@ -2,6 +2,8 @@
 
 An ActiveJob queuing backend which uses ActiveRecord. 
 
+For API docs, see: https://www.rubydoc.info/github/nicholasdower/arj
+
 For more information on ActiveJob, see:
 
 - https://edgeguides.rubyonrails.org/active_job_basics.html

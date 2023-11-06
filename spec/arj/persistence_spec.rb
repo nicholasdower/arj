@@ -251,6 +251,10 @@ describe Arj::Persistence do
 
     before { Arj::Test::Job.perform_later('some arg') }
 
+    it 'returns the job' do
+      expect(subject).to be_a(Arj::Test::Job)
+    end
+
     context 'when record is not of type Arj.record_class' do
       let(:record) { nil }
 
@@ -268,14 +272,22 @@ describe Arj::Persistence do
     end
 
     context 'when job is nil' do
-      context 'when job_class is not an ActiveJob::Base' do
-        let(:job) { nil }
+      let(:job) { nil }
 
+      context 'when job_class is not an ActiveJob::Base' do
         before { record.job_class = 'String' }
 
         it 'raises' do
           expect { subject }.to raise_error(StandardError, /expected ActiveJob::Base, found String/)
         end
+      end
+
+      it 'returns a the job' do
+        expect(subject.job_id).to eq(record.job_id)
+      end
+
+      it 'returns an Arj::Job' do
+        expect(subject).to be_a(Arj::Job)
       end
     end
 
@@ -295,7 +307,7 @@ describe Arj::Persistence do
       end
     end
 
-    context 'record data' do
+    context 'when job attributes have not been populated' do
       let(:job) { Arj::Test::Job.new }
 
       it 'populates job fields' do
@@ -309,10 +321,140 @@ describe Arj::Persistence do
         subject
         expect(job.arguments).to eq(['some arg'])
       end
+
+      it 'returns an Arj::Job' do
+        expect { subject }.to change { job.is_a?(Arj::Job) }.from(false).to(true)
+      end
+    end
+  end
+
+  context '.enqueue' do
+    subject { Arj::Persistence.enqueue(job, timestamp) }
+
+    let(:timestamp) { nil }
+
+    context 'when the job has not been enqueued before' do
+      let!(:job) { Arj::Test::Job.new('some arg') }
+
+      it 'persists the record' do
+        expect { subject }.to change(Job, :count).from(0).to(1)
+        expect(Job.last.job_id).not_to be_nil
+        expect(Job.last.job_id).to eq(job.job_id)
+      end
+
+      it 'updates successfully_enqueued' do
+        expect { subject }.to change { job.successfully_enqueued? }.from(nil).to(true)
+      end
+
+      it 'prepends Arj::Job' do
+        expect { subject }.to change { job.singleton_class < Arj::Job }.from(nil).to(true)
+      end
     end
 
-    it 'returns the job' do
-      expect(subject).to be_a(Arj::Test::Job)
+    context 'when the job has been enqueued before' do
+      let!(:job) { Arj::Test::Job.perform_later('some arg') }
+
+      it 'updates enqueued_at' do
+        Timecop.travel(1.second)
+        expect { subject }.to change { Job.sole.enqueued_at.to_s }.from(1.second.ago.to_s).to(Time.zone.now.to_s)
+      end
+
+      context 'when the job has been updated' do
+        let!(:job) { Arj::Test::Job.set(queue: 'some queue').perform_later('some arg') }
+
+        before { job.queue_name = 'other queue' }
+
+        it 'updates the database' do
+          expect { subject }.to change { Job.sole.queue_name }.from('some queue').to('other queue')
+        end
+      end
+    end
+  end
+
+  context '.job_data' do
+    subject { Arj::Persistence.job_data(record) }
+
+    let!(:job) { Arj::Test::Job.perform_later(1) }
+    let(:record) { Job.sole }
+
+    context 'when arguments is not valid JSON' do
+      before do
+        record.update!(arguments: '{')
+      end
+
+      it 'raises' do
+        expect { subject }.to raise_error(JSON::ParserError, "unexpected token at '{'")
+      end
+    end
+
+    context 'when exception_executions not valid JSON' do
+      before do
+        record.update!(exception_executions: '{')
+      end
+
+      it 'raises' do
+        expect { subject }.to raise_error(JSON::ParserError, "unexpected token at '{'")
+      end
+    end
+
+    context 'when scheduled_at is nil' do
+      before do
+        record.update!(scheduled_at: nil)
+      end
+
+      it 'returns nil scheduled_at' do
+        expect(subject['scheduled_at']).to be_nil
+      end
+    end
+
+    context 'when record missing expected attributes' do
+      before do
+        stub_const('AddEnqueuedAtToJobs', Class.new(ActiveRecord::Migration[7.1]))
+        AddEnqueuedAtToJobs.class_eval do
+          def self.up
+            add_column :jobs, :enqueued_at, :datetime, null: false
+          end
+
+          def self.down
+            remove_column :jobs, :enqueued_at
+          end
+        end
+      end
+
+      after do
+        Job.destroy_all
+        TestDb.migrate(AddEnqueuedAtToJobs, :up)
+      end
+
+      it 'raises' do
+        TestDb.migrate(AddEnqueuedAtToJobs, :down)
+        expect { subject }.to raise_error(KeyError, 'key not found: "enqueued_at"')
+      end
+    end
+  end
+
+  context '.record_attributes' do
+    subject { Arj::Persistence.record_attributes(job) }
+
+    let!(:job) { Arj::Test::Job.perform_later }
+
+    it 'returns expected attributes' do
+      expect(subject.keys).to eq(%i[
+                                   job_class job_id queue_name priority arguments executions
+                                   exception_executions locale timezone enqueued_at scheduled_at
+                                 ])
+    end
+
+    context 'when the job is missing a required attribute' do
+      before do
+        serialized = job.serialize
+        serialized.delete('arguments')
+        allow(job).to receive(:serialize).and_return(serialized)
+      end
+
+      it 'raises' do
+        expect { subject }.to raise_error(KeyError, 'key not found: "arguments"')
+      end
     end
   end
 end

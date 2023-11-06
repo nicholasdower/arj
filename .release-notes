@@ -1,1 +1,1 @@
-- No changes.
+- Added Arj::Job, a module prepended to enqueued jobs.

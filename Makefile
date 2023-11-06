@@ -10,7 +10,7 @@ help:
 	@echo '  / ____ \  | |    | |'
 	@echo ' /_/    \_\ |_|   _/ |'
 	@echo '                 |__/ '
-	@echo 'Arj, An ActiveJob queuing backend which uses ActiveRecord.'
+	@echo 'Arj. An ActiveJob queuing backend which uses ActiveRecord.'
 	@echo
 	@echo 'Targets:'
 	@echo '  install:     Run bundle install'

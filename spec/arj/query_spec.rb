@@ -104,10 +104,10 @@ describe Arj::Query do
     end
   end
 
-  context '.pretty_inspect' do
-    before { Arj::Test::Job.perform_later(1) }
-
+  context '#pretty_inspect' do
     subject { Arj.all.pretty_inspect }
+
+    before { Arj::Test::Job.perform_later(1) }
 
     it 'returns Arj jobs representations' do
       expect(subject).to start_with('[#<Arj::Test::Job:')

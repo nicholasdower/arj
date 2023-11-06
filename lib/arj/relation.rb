@@ -23,15 +23,13 @@ module Arj
       when Array
         result.map do |item|
           if item.is_a?(Arj.record_class)
-            job = Persistence.from_record(item)
-            Persistence.enhance(job)
+            Persistence.from_record(item)
           else
             item
           end
         end
       when Arj.record_class
-        job = Persistence.from_record(result)
-        Persistence.enhance(job)
+        Persistence.from_record(result)
       else
         result
       end

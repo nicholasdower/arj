@@ -26,7 +26,7 @@ describe Arj::Relation do
     end
   end
 
-  context '#update_job' do
+  context '#update_job!' do
     subject { relation.update_job!(attributes) }
 
     let(:attributes) { {} }
@@ -88,6 +88,16 @@ describe Arj::Relation do
           expect(subject.second.provider_job_id).to eq(Job.second.id)
         end
       end
+    end
+  end
+
+  context '#pretty_inspect' do
+    subject { relation.pretty_inspect }
+
+    before { Arj::Test::Job.perform_later(1) }
+
+    it 'returns Arj jobs representations' do
+      expect(subject).to start_with('[#<Arj::Test::Job:')
     end
   end
 end

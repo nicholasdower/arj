@@ -54,25 +54,8 @@ module Arj
           record.update!(Persistence.record_attributes(job))
         else
           record = Arj.record_class.create!(Persistence.record_attributes(job))
-          enhance(job)
         end
         Persistence.from_record(record, job)
-
-        job
-      end
-
-      # Updates the specified job with Arj-specific features.
-      #
-      # @return [ActiveJob::Base] the enhanced job
-      def enhance(job)
-        job.singleton_class.class_eval do
-          def perform_now
-            self.successfully_enqueued = false
-            super
-          ensure
-            Arj.record_class.find(provider_job_id).destroy! unless successfully_enqueued?
-          end
-        end
 
         job
       end
@@ -96,8 +79,8 @@ module Arj
 
         # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
         job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
-
         job.deserialize(job_data)
+        job.singleton_class.prepend(Arj::Job) unless job.singleton_class < Arj::Job
 
         job
       end
