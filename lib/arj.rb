@@ -20,7 +20,10 @@ require_relative 'arj/worker'
 # - Job query methods. See: {Arj::Query::ClassMethods}.
 # - Job persistence methods similar to {Arj::Persistence}.
 module Arj
-  @record_class = 'Job'
+  DEFAULT_RECORD_CLASS = 'Job'
+  private_constant :DEFAULT_RECORD_CLASS
+
+  @record_class = DEFAULT_RECORD_CLASS
 
   extend Query::ClassMethods
 

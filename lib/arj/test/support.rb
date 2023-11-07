@@ -13,6 +13,7 @@ module Arj
   # - {Error}            - A test error which, when raised from a test job, will cause the job to be retried.
   # - {JobWithShard}     - A test job with an added +shard+ column.
   # - {JobWithLastError} - A test job with an added +last_error+ column.
+  # - {JobWithTimeout}   - A test job with a timeout.
   module Test
     include Query
 
@@ -159,6 +160,13 @@ module Arj
     # A {Job} with a +last_error+ attribute. See: {Arj::Extensions::LastError}.
     class JobWithLastError < Arj::Test::Job
       include Arj::Extensions::LastError
+    end
+
+    # A {Job} with a timeout. See: {Arj::Extensions::Timeout}.
+    class JobWithTimeout < Arj::Test::Job
+      include Arj::Extensions::Timeout
+
+      timeout_after(1.second)
     end
   end
 end
