@@ -88,6 +88,14 @@ describe Arj::Relation do
           expect(subject.second.provider_job_id).to eq(Job.second.id)
         end
       end
+
+      context 'when not all attributes loaded' do
+        let(:relation) { Arj.select(:job_class) }
+
+        it 'raises' do
+          expect { subject }.to raise_error(StandardError, 'unexpected job: Job')
+        end
+      end
     end
   end
 
@@ -98,6 +106,20 @@ describe Arj::Relation do
 
     it 'returns Arj jobs representations' do
       expect(subject).to start_with('[#<Arj::Test::Job:')
+    end
+  end
+
+  context '#select' do
+    subject { relation.sole }
+
+    before { Arj::Test::Job.perform_later }
+
+    context 'when not all attributes loaded' do
+      let(:relation) { Arj.select(:job_class) }
+
+      it 'returns records' do
+        expect(subject).to be_a(ActiveRecord::Base)
+      end
     end
   end
 end

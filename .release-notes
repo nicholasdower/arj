@@ -1,1 +1,2 @@
-- Add Arj::QueryDocumentation to provide documentation and autocomplete for ActiveRecord query methods.
+- Add `Arj::QueryDocumentation` to provide documentation and autocomplete for `ActiveRecord::Relation` query methods.
+- Add support for queries like `Arj.select(:job_class)`. `Arj::Relation` now returns records in this case.

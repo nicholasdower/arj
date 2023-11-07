@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'active_job'
+require 'active_job/base'
 require 'active_job/arguments'
 require 'active_record'
 require 'json'

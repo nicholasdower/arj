@@ -26,9 +26,7 @@ class QueryDocumentationGenerator
       module Arj
         # Provides documentation (and autocomplete) for ActiveRecord query methods.
         #
-        # See {https://www.rubydoc.info/github/rails/rails/ActiveRecord/QueryMethods ActiveRecord::QueryMethods},
-        # {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Result ActiveRecord::Result} and
-        # {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Result ActiveRecord::Relation}
+        # See: {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation}
         module QueryDocumentation
     DOC
 
@@ -61,7 +59,7 @@ class QueryDocumentationGenerator
     intersection.each do |method|
       out.puts <<~DOC.gsub(/^\|/, '')
         |    # @!method #{method}
-        |    #   See {#{@base_path}/#{path}\##{method}-instance_method #{clazz.name}\##{method}}
+        |    #   See: {#{@base_path}/#{path}\##{method}-instance_method #{clazz.name}\##{method}}
       DOC
     end
     intersection

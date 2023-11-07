@@ -7,7 +7,10 @@ require_relative '../arj'
 module Arj
   # Wrapper for +ActiveRecord::Relation+ which maps record objects to job objects.
   #
-  # See {Query}
+  # Note that record will not be mapped to jobs if they are missing one or more attributes (for instance when using
+  # +select+). In this case, the record objects will be returned directly.
+  #
+  # See: {Query}, {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation}
   class Relation
     # Returns an Arj::Relation which wraps the specified ActiveRecord Relation, WhereChain, etc.
     def initialize(ar_relation)
@@ -20,18 +23,18 @@ module Arj
     def method_missing(method, *, &)
       result = @ar_relation.send(method, *, &)
       case result
-      when ActiveRecord::Relation, ActiveRecord::QueryMethods::WhereChain
+      when ActiveRecord::Relation
         Relation.new(result)
       when Array
         result.map do |item|
           if item.is_a?(Arj.record_class)
-            Persistence.from_record(item)
+            maybe_to_job(item)
           else
             item
           end
         end
       when Arj.record_class
-        Persistence.from_record(result)
+        maybe_to_job(result)
       else
         result
       end
@@ -50,6 +53,8 @@ module Arj
     # @return [Array<ActiveJob::Base>]
     def update_job!(attributes)
       to_a.map do |job|
+        raise "unexpected job: #{job.class}" unless job.is_a?(ActiveJob::Base)
+
         job.update!(attributes)
         job
       end
@@ -77,6 +82,18 @@ module Arj
     # @return [NilClass]
     def pretty_print(pp)
       pp.pp(to_a)
+    end
+
+    private
+
+    def maybe_to_job(record)
+      # If all attributes are present, return a job, otherwise, return the record.
+      # Attributes may be missing if, for instance, `select` was used.
+      if (Arj.record_class.attribute_names - record.attributes.keys).empty?
+        Persistence.from_record(record)
+      else
+        record
+      end
     end
   end
 end

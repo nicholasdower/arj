@@ -13,11 +13,11 @@ require_relative 'arj/worker'
 
 # Arj. An ActiveJob queuing backend which uses ActiveRecord.
 #
-# For more information about Arj, see https://github.com/nicholasdower/arj.
+# For more information about Arj, see: https://github.com/nicholasdower/arj.
 #
 # The Arj module provides:
 # - Access to the global Arj setting {record_class}.
-# - Job query methods. See {Arj::Query::ClassMethods}.
+# - Job query methods. See: {Arj::Query::ClassMethods}.
 # - Job persistence methods similar to {Arj::Persistence}.
 module Arj
   @record_class = 'Job'

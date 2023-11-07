@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'active_job'
 require 'active_job/base'
 require_relative '../persistence'
 require_relative '../query'
@@ -150,12 +151,12 @@ module Arj
       end
     end
 
-    # A {Job} with a +shard+ attribute. See {Arj::Extensions::Shard}.
+    # A {Job} with a +shard+ attribute. See: {Arj::Extensions::Shard}.
     class JobWithShard < Arj::Test::Job
       include Arj::Extensions::Shard
     end
 
-    # A {Job} with a +last_error+ attribute. See {Arj::Extensions::LastError}.
+    # A {Job} with a +last_error+ attribute. See: {Arj::Extensions::LastError}.
     class JobWithLastError < Arj::Test::Job
       include Arj::Extensions::LastError
     end

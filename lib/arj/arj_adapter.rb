@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'active_job'
 require 'active_job/base'
 require_relative 'persistence'
 

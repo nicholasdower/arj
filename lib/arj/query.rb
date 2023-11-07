@@ -42,13 +42,11 @@ module Arj
   #   FooBazJob.perform_later
   #   FooJobs.available.first # Returns the first available job of type FooBarJob or FooBazJob.
   #
-  # See {https://www.rubydoc.info/github/rails/rails/ActiveRecord/QueryMethods ActiveRecord::QueryMethods},
-  # {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Result ActiveRecord::Result} and
-  # {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Result ActiveRecord::Relation}
+  # See: {ClassMethods}, {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation}
   module Query
     # Class methods which are automatically added when {Query} is included in a class.
     #
-    # See {Arj::Query} and {Arj::QueryDocumentation}
+    # See: {Arj::Query} and {Arj::QueryDocumentation}
     module ClassMethods
       include Arj::QueryDocumentation
 
