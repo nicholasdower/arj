@@ -5,6 +5,7 @@ require 'active_job/arguments'
 require 'active_record'
 require 'json'
 require_relative '../arj'
+require_relative 'job'
 
 module Arj
   # ActiveRecord-style persistence methods (+save!+, +update!+, +exists?+, etc.), but for jobs.

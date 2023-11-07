@@ -10,7 +10,7 @@ Install Ruby 3.2.2, then run `make help`:
   / ____ \  | |    | |
  /_/    \_\ |_|   _/ |
                  |__/
-Arj, An ActiveJob queuing backend which uses ActiveRecord.
+Arj. An ActiveJob queuing backend which uses ActiveRecord.
 
 Targets:
   install:     Run bundle install
@@ -20,8 +20,10 @@ Targets:
   rspec:       Run all specs
   coverage:    Run all specs with coverage
   precommit:   Run lint and specs
-  watch:       Run lint and specs on file change
-  yard:        Generate documentation
-  yard-open:   Generate and open documentation
+  watch:       Run lint, specs and generate documentation on file change
+  doc:         Generate documentation
+  open-doc:    Open documentation
+  watch-doc:   Generate documentation on file change
   clean:       Remove *.gem, .yardoc/, doc/
+  gem:         Build a gem
 ```

@@ -77,7 +77,7 @@ class Watcher
 end
 
 def help
-  warn 'Usage: ./scripts/rerun (--include path... | --exclude path...)... -- <command>'
+  warn 'Usage: ./scripts/rerun find-args... -- <command>'
   exit 1
 end
 

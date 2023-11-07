@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../arj'
+require_relative 'query_documentation'
 require_relative 'relation'
 
 module Arj
@@ -40,9 +41,17 @@ module Arj
   #   FooBarJob.perform_later
   #   FooBazJob.perform_later
   #   FooJobs.available.first # Returns the first available job of type FooBarJob or FooBazJob.
+  #
+  # See {https://www.rubydoc.info/github/rails/rails/ActiveRecord/QueryMethods ActiveRecord::QueryMethods},
+  # {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Result ActiveRecord::Result} and
+  # {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Result ActiveRecord::Relation}
   module Query
     # Class methods which are automatically added when {Query} is included in a class.
+    #
+    # See {Arj::Query} and {Arj::QueryDocumentation}
     module ClassMethods
+      include Arj::QueryDocumentation
+
       delegate(*ActiveRecord::Querying::QUERYING_METHODS, to: :all)
 
       # Returns a {Relation} scope object for all jobs.

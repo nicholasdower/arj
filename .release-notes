@@ -1,1 +1,1 @@
-- No changes.
+- Add Arj::QueryDocumentation to provide documentation and autocomplete for ActiveRecord query methods.

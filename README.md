@@ -2,9 +2,9 @@
 
 An ActiveJob queuing backend which uses ActiveRecord. 
 
-API docs: https://www.rubydoc.info/github/nicholasdower/arj \
-RubyGems: https://rubygems.org/gems/arj \
-Changelog: https://github.com/nicholasdower/arj/releases \
+API docs: https://www.rubydoc.info/github/nicholasdower/arj <br>
+RubyGems: https://rubygems.org/gems/arj <br>
+Changelog: https://github.com/nicholasdower/arj/releases <br>
 Issues: https://github.com/nicholasdower/arj/issues
 
 For more information on ActiveJob, see:

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'active_job/base'
-require_relative 'arj/persistence'
+require_relative 'persistence'
 
 # ActiveJob queue adapter for Arj.
 #

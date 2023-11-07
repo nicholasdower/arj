@@ -20,9 +20,10 @@ help:
 	@echo '  rspec:       Run all specs'
 	@echo '  coverage:    Run all specs with coverage'
 	@echo '  precommit:   Run lint and specs'
-	@echo '  watch:       Run lint and specs on file change'
-	@echo '  yard:        Generate documentation'
-	@echo '  yard-open:   Generate and open documentation'
+	@echo '  watch:       Run lint, specs and generate documentation on file change'
+	@echo '  doc:         Generate documentation'
+	@echo '  open-doc:    Open documentation'
+	@echo '  watch-doc:   Generate documentation on file change'
 	@echo '  clean:       Remove *.gem, .yardoc/, doc/'
 	@echo '  gem:         Build a gem'
 
@@ -64,13 +65,18 @@ precommit: .install
 watch: .install
 	@./script/rerun $(WATCH_FILES) -type f -- make precommit
 
-.PHONY: yard
-yard: .install
+.PHONY: doc
+doc: .install
+	@bundle exec script/generate-query-documentation.rb
 	@yard 
 
-.PHONY: yard-open
-yard-open: yard
+.PHONY: open-doc
+open-doc:
 	@if [[ `which open` ]]; then open ./doc/Arj.html; fi
+
+.PHONY: watch-doc
+watch-doc:
+	@./script/rerun $(WATCH_FILES) README.md -not -name query_documentation.rb -type f -- make doc
 
 .PHONY: clean-gems
 clean-gems:
