@@ -59,15 +59,55 @@ describe 'performing' do
     end
   end
 
-  context '.perform_now' do
-    let(:subject) { Arj::Test::Job.new('some_arg').perform_now }
+  context '#perform_now' do
+    let(:subject) { job.perform_now }
 
-    it 'does not persist a job' do
-      expect { subject }.not_to change(Job, :count).from(0)
+    context 'when the job was not enqueued' do
+      let(:job) { Arj::Test::Job.new('some_arg') }
+
+      it 'does not persist a job' do
+        expect { subject }.not_to change(Job, :count).from(0)
+      end
+
+      it 'returns the result' do
+        expect(subject).to eq('some_arg')
+      end
     end
 
-    it 'returns the result' do
-      expect(subject).to eq('some_arg')
+    context 'when the job is re-enqueued' do
+      let!(:job) { Arj::Test::Job.perform_later(Arj::Test::Error) }
+
+      it 'does not delete the database record' do
+        expect { subject }.not_to change(Job, :count).from(1)
+      end
+    end
+
+    context 'when re-enqueuing fails' do
+      let!(:job) { Arj::Test::Job.perform_later(Arj::Test::Error) }
+
+      before do
+        allow(ActiveJob::Base.queue_adapter).to receive(:enqueue_at).and_raise(StandardError, 'enqueue failed')
+      end
+
+      it 'does not delete the database record' do
+        expect { subject rescue nil }.not_to change(Job, :count).from(1)
+      end
+    end
+
+    context 'when the job is not re-enqueued' do
+      let!(:job) { Arj::Test::Job.perform_later }
+
+      it 'deletes the database record' do
+        expect { subject }.to change(Job, :count).from(1).to(0)
+      end
+
+      context 'when the database record no longer exists' do
+        before { Job.destroy_all }
+
+        it 'raises' do
+          expect { subject }.to raise_error(ActiveRecord::RecordNotFound, /Couldn't find Job with 'id'/)
+        end
+      end
     end
   end
 

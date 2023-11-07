@@ -3,7 +3,6 @@
 require 'active_record'
 require_relative 'arj/arj_adapter'
 require_relative 'arj/extensions'
-require_relative 'arj/job'
 require_relative 'arj/persistence'
 require_relative 'arj/query'
 require_relative 'arj/query_documentation'

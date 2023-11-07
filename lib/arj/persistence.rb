@@ -6,7 +6,6 @@ require 'active_job/arguments'
 require 'active_record'
 require 'json'
 require_relative '../arj'
-require_relative 'job'
 
 module Arj
   # ActiveRecord-style persistence methods (+save!+, +update!+, +exists?+, etc.), but for jobs.
@@ -82,7 +81,18 @@ module Arj
         # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
         job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
         job.deserialize(job_data)
-        job.singleton_class.prepend(Arj::Job) unless job.singleton_class < Arj::Job
+        unless job.singleton_class.instance_variable_get(:@__arj)
+          job.singleton_class.around_perform do |job, block|
+            block.call
+            Arj.record_class.find(job.provider_job_id).destroy!
+          end
+
+          job.singleton_class.after_discard do |job, _exception|
+            Arj.record_class.find(job.provider_job_id).destroy!
+          end
+
+          job.singleton_class.instance_variable_set(:@__arj, true)
+        end
 
         job
       end

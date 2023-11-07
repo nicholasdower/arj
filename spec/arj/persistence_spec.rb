@@ -286,8 +286,8 @@ describe Arj::Persistence do
         expect(subject.job_id).to eq(record.job_id)
       end
 
-      it 'returns an Arj::Job' do
-        expect(subject).to be_a(Arj::Job)
+      it 'returns an enhanced job' do
+        expect(subject.singleton_class.instance_variable_get(:@__arj)).to eq(true)
       end
     end
 
@@ -322,8 +322,8 @@ describe Arj::Persistence do
         expect(job.arguments).to eq(['some arg'])
       end
 
-      it 'returns an Arj::Job' do
-        expect { subject }.to change { job.is_a?(Arj::Job) }.from(false).to(true)
+      it 'enhances the job with Arj features' do
+        expect { subject }.to change { job.singleton_class.instance_variable_get(:@__arj) }.from(nil).to(true)
       end
     end
   end
@@ -346,8 +346,8 @@ describe Arj::Persistence do
         expect { subject }.to change { job.successfully_enqueued? }.from(nil).to(true)
       end
 
-      it 'prepends Arj::Job' do
-        expect { subject }.to change { job.singleton_class < Arj::Job }.from(nil).to(true)
+      it 'enhances the job with Arj features' do
+        expect { subject }.to change { job.singleton_class.instance_variable_get(:@__arj) }.from(nil).to(true)
       end
     end
 
