@@ -135,28 +135,28 @@ class SampleJob < ActiveJob::Base
 end
 ```
 
-And used like:
+Example usage:
 
 ```ruby
 job = SampleJob.perform_later
 job.update!(queue_name: 'some queue')
 ```
 
-## Workers
+## Worker
 
-Execute all availble jobs using a worker:
+To execute all available jobs:
 
 ```ruby
 Arj::Worker.new.work_off
 ```
 
-Start a worker which will execute jobs as they become available:
+To start a worker which will execute jobs as they become available:
 
 ```ruby
 Arj::Worker.new.start
 ```
 
-Start a job with custom criteria:
+To start a worker with custom criteria:
 
 ```ruby
 Arj::Worker.new(description: 'Arj::Worker(first)', source: -> { Arj.first }).start

@@ -10,7 +10,7 @@ module Arj
     #   class SampleJob < ActiveJob::Base
     #     include Arj::Extensions::Timeout
     #
-    #     timeout_after(1.second)
+    #     timeout_after 1.second
     #
     #     def perform
     #       sleep 2
@@ -29,7 +29,7 @@ module Arj
     #   class SampleJob < ActiveJob::Base
     #     include Arj::Extensions::Timeout
     #
-    #     timeout_after(5.seconds)
+    #     timeout_after 5.seconds
     #   end
     module Timeout
       @default_timeout = 5.minutes
@@ -47,7 +47,7 @@ module Arj
       # Class methods added to jobs which include {Arj::Extensions::Timeout}.
       module ClassMethods
         # Sets the maximum amount of time jobs of this type may execute before being terminated. Overrides the global
-        # default {Arj::Timeout.default_timeout}.
+        # default {Arj::Extensions::Timeout.default_timeout}.
         #
         # @param duration [Duration, NilClass]
         # @return [Duration]
