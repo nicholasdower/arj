@@ -19,8 +19,9 @@ For more information on ActiveJob, see:
 - [Persistence](#persistence)
 - [Worker](#worker)
 - [Extensions](#extensions)
-  * [Last error](#last-error)
+  * [LastError](#lasterror)
   * [Shard](#shard)
+  * [Timeout](#timeout)
 - [Testing](#testing)
 
 ## Setup
@@ -31,13 +32,7 @@ Add the following to your Gemfile:
 gem 'arj', '~> 0.0'
 ```
 
-Or install the Gem:
-
-```bash
-gem install arj
-```
-
-Apply the following DB migration:
+Apply a database migration:
 
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
@@ -147,7 +142,7 @@ job = SampleJob.perform_later
 job.update!(queue_name: 'some queue')
 ```
 
-## Worker
+## Workers
 
 Execute all availble jobs using a worker:
 
@@ -171,7 +166,11 @@ Arj::Worker.new(description: 'Arj::Worker(first)', source: -> { Arj.first }).sta
 
 ### Shard
 
-To add a +shard+ attribute to jobs, first, apply a migration:
+Adds a +shard+ attribute to jobs.
+
+#### Setup
+
+First, apply a migration:
 
 ```ruby
 class AddShardToJobs < ActiveRecord::Migration[7.1]
@@ -181,7 +180,7 @@ class AddShardToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Next, include the shard extension:
+Next, include the `Shard` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
@@ -189,15 +188,19 @@ class SampleJob < ActiveJob::Base
 end
 ```
 
-Example usage:
+#### Example Usage
 
 ```ruby
 SampleJob.set(shard: 'some shard').perform_later('foo')
 ```
 
-### Last error
+### LastError
 
-To add a +last_error+ attribute to jobs, first, apply a migration:
+Adds a +last_error+ attribute to jobs which will contain the stacktrace of the last error encountered during execution.
+
+#### Setup
+
+First, apply a migration:
 
 ```ruby
 class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
@@ -207,11 +210,80 @@ class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Next, include the last error extension:
+Next, include the `LastError` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
   include Arj::Extensions::LastError
+end
+```
+
+#### Example Usage
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::LastError
+
+  retry_on Exception
+
+  def perform
+    raise 'oh, hi'
+  end
+end
+
+job = SampleJob.perform_later
+job.perform_now
+puts job.last_error
+```
+
+### Timeout
+
+Adds job timeouts.
+
+#### Setup
+
+First, include the `Timeout` extension:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::Timeout
+
+  def perform
+    sleep 10
+  end
+end
+```
+
+Optionally, override the default timeout:
+
+```ruby
+Arj::Extensions::Timeout.default_timeout = 5.seconds
+```
+
+Optionally, override the default timeout for a job class:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::Timeout
+
+  timeout_after(5.seconds)
+end
+```
+
+#### Example Usage
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::Timeout
+
+  timeout_after(1.second)
+
+  def perform
+    sleep 2
+  end
+
+  job = SampleJob.perform_later
+  job.perform_now
 end
 ```
 
@@ -223,6 +295,7 @@ The following sample jobs are provided for use in tests:
 Arj::Test::Job
 Arj::Test::JobWithShard
 Arj::Test::JobWithLastError
+Arj::Test::JobWithTimeout
 ```
 
 To test job failures:
@@ -233,7 +306,15 @@ job.perform_now
 ```
 
 To test retries:
+
 ```ruby
 job = Arj::Test::Job.perform_later(Arj::Test::Error)
+job.perform_now
+```
+
+To test timeouts:
+
+```ruby
+job = Arj::Test::JobWithTimeout.perform_later(-> { sleep 2 })
 job.perform_now
 ```

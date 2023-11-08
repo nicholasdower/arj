@@ -1,13 +1,9 @@
-Add perform override to Test::Job
-Make it easier to add fields without having to override serialize and deserialize
-Add helper to convert errors to strings
-Test what happens when the record is missing a required field
-Timeouts
-API docs
 Handle errors enqueuing, prevent busy loop
 Allow record class to be set per job.
 Add ActiveJob cheatsheet to README.md.
-Require test coverage.
-Figure out version scheme. Should it track ActiveJob?
-Add documentation for query methods.
-Test next. Nulls, starvation, etc.
+Fail build on low test coverage
+Test available method (nulls, etc.)
+Add a failing query method.
+Add discarded extension. Maybe add a discarded query method.
+Lower Rails and Ruby requirements.
+Add perform_on_commit extension

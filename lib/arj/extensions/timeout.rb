@@ -3,49 +3,71 @@
 require 'timeout'
 
 module Arj
-  module Timeout
-    DEFAULT_DEFAULT_TIMEOUT = 5.minutes
-    private_constant :DEFAULT_DEFAULT_TIMEOUT
-
-    @default_timeout = DEFAULT_DEFAULT_TIMEOUT
-
-    class << self
-      # The default maximum amount of time a job may run before being terminated.
-      #
-      # @type [ActiveSupport::Duration]
-      attr_accessor :default_timeout
-    end
-
-    class Error < StandardError; end
-
-    module Job
-      module ClassMethods
-        def timeout_after(duration)
-          @timeout = duration
-        end
-
-        def timeout
-          @timeout || Arj::Timeout.default_timeout
-        end
-      end
-
-      def perform_now
-        ::Timeout.timeout(self.class.timeout.in_seconds, Error) { super }
-      end
-    end
-  end
-
   module Extensions
+    # Adds timeout support to a job class.
+    #
+    # Example usage:
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj::Extensions::Timeout
+    #
+    #     timeout_after(1.second)
+    #
+    #     def perform
+    #       sleep 2
+    #     end
+    #   end
+    #
+    #   job = SampleJob.perform_later
+    #   job.perform_now
+    #
+    # Optionally, the default timeout may be changed:
+    #
+    #   Arj::Extensions::Timeout.default_timeout = 5.seconds
+    #
+    # Optionally, the timeout can be customized for a job class:
+    #
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj::Extensions::Timeout
+    #
+    #     timeout_after(5.seconds)
+    #   end
     module Timeout
-      # Prepends {Arj::Timeout::Job} when this module is included.
+      @default_timeout = 5.minutes
+
+      class << self
+        # The default maximum amount of time a job may run before being terminated.
+        #
+        # @return [ActiveSupport::Duration]
+        attr_accessor :default_timeout
+      end
+
+      # Exception raised when a job times out.
+      class Error < StandardError; end
+
+      # Class methods added to jobs which include {Arj::Extensions::Timeout}.
+      module ClassMethods
+        # Sets the maximum amount of time jobs of this type may execute before being terminated. Overrides the global
+        # default {Arj::Timeout.default_timeout}.
+        #
+        # @param duration [Duration, NilClass]
+        # @return [Duration]
+        def timeout_after(duration)
+          @__arj_timeout = duration
+        end
+      end
+
+      # Extends the specified class with {Arj::Timeout::ClassMethods} and registers an +around_perform+ callback used
+      # to enforce timeouts.
       #
       # @param clazz [Class]
       # @return [Class]
       def self.included(clazz)
-        raise "expected an ActiveJob::Base, found: #{clazz}" unless clazz < ActiveJob::Base
-
-        clazz.prepend(Arj::Timeout::Job)
-        clazz.extend(Arj::Timeout::Job::ClassMethods)
+        clazz.around_perform do |job, block|
+          timeout = job.class.instance_variable_get(:@__arj_timeout)
+          timeout ||= Arj::Extensions::Timeout.default_timeout
+          ::Timeout.timeout(timeout.in_seconds, Arj::Extensions::Timeout::Error) { block.call }
+        end
+        clazz.extend(Arj::Extensions::Timeout::ClassMethods)
       end
     end
   end

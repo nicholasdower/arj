@@ -18,8 +18,8 @@ module Arj
     #   end
     #
     #   job = SampleJob.perform_later
-    #   job.perform_now               # raises
-    #   job.last_error                # contains the stacktrace of the previous error
+    #   job.perform_now
+    #   puts job.last_error
     module LastError
       # Returns a String representing the last error encountered during execution, if any.
       #

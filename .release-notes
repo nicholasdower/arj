@@ -1,2 +1,5 @@
 - Add `Arj::QueryDocumentation` to provide documentation and autocomplete for `ActiveRecord::Relation` query methods.
 - Add support for queries like `Arj.select(:job_class)`. `Arj::Relation` now returns records in this case.
+- Add `Arj::Extensions::Timeout`.
+- Remove `Arj::Job`. Customization is now achieved via `ActiveJob` calbacks.
+- Fix bug causing jobs to be discarded when an error occurrs on re-enqueue.

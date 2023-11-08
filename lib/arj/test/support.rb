@@ -166,6 +166,8 @@ module Arj
     class JobWithTimeout < Arj::Test::Job
       include Arj::Extensions::Timeout
 
+      retry_on Arj::Extensions::Timeout::Error, wait: 1.minute, attempts: 2
+
       timeout_after(1.second)
     end
   end

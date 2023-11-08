@@ -82,8 +82,7 @@ module Arj
         job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
         job.deserialize(job_data)
         unless job.singleton_class.instance_variable_get(:@__arj)
-          job.singleton_class.around_perform do |job, block|
-            block.call
+          job.singleton_class.after_perform do |job|
             Arj.record_class.find(job.provider_job_id).destroy!
           end
 
