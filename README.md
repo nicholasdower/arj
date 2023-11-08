@@ -266,7 +266,7 @@ Optionally, override the default timeout for a job class:
 class SampleJob < ActiveJob::Base
   include Arj::Extensions::Timeout
 
-  timeout_after(5.seconds)
+  timeout_after 5.seconds
 end
 ```
 
@@ -276,7 +276,7 @@ end
 class SampleJob < ActiveJob::Base
   include Arj::Extensions::Timeout
 
-  timeout_after(1.second)
+  timeout_after 1.second
 
   def perform
     sleep 2

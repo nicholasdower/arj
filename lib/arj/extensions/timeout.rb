@@ -65,7 +65,7 @@ module Arj
         clazz.around_perform do |job, block|
           timeout = job.class.instance_variable_get(:@__arj_timeout)
           timeout ||= Arj::Extensions::Timeout.default_timeout
-          ::Timeout.timeout(timeout.in_seconds, Arj::Extensions::Timeout::Error) { block.call }
+          ::Timeout.timeout(timeout.in_seconds, Arj::Extensions::Timeout::Error, 'execution expired') { block.call }
         end
         clazz.extend(Arj::Extensions::Timeout::ClassMethods)
       end
