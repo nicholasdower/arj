@@ -103,6 +103,7 @@ GEM
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.5.0)
+    yard (0.9.34)
 
 PLATFORMS
   x86_64-darwin-20
@@ -122,6 +123,7 @@ DEPENDENCIES
   simplecov-console (~> 0.0)
   sqlite3 (~> 1.0)
   timecop (~> 0.0)
+  yard (~> 0.0)
 
 BUNDLED WITH
-   2.4.18
+   2.4.12

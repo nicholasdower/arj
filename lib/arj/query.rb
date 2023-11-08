@@ -79,7 +79,7 @@ module Arj
       # @return [ActiveJob::Base]
       def available(queue_name: nil, max_executions: nil)
         relation = where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
-        relation = relation.where(queue_name:) if queue_name
+        relation = relation.where(queue_name: queue_name) if queue_name
         relation = relation.where('executions < ?', max_executions) if max_executions
         relation.order(Arel.sql('CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority, created_at'))
       end

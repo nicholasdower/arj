@@ -318,3 +318,54 @@ To test timeouts:
 job = Arj::Test::JobWithTimeout.perform_later(-> { sleep 2 })
 job.perform_now
 ```
+
+## ActiveJob Cheatsheet
+
+### Creating Jobs
+
+```ruby
+job = SampleJob.new                 # Created without args, not enqueued
+job = SampleJob.new(args)           # Created with args, not enqueued
+
+job = SampleJob.perform_later       # Enqueued without args
+job = SampleJob.perform_later(args) # Enqueued with args
+
+SampleJob.perform_now               # Created without args, not enqueued unless retried
+SampleJob.perform_now(args)         # Created with args, ot enqueued unless retried
+```
+
+### Enqueueing Jobs
+
+```ruby
+SampleJob.new(args).enqueue                    # Enqueued without options
+SampleJob.new(args).enqueue(options)           # Enqueued with options
+
+SampleJob.perform_later(args)                  # Enqueued without options
+SampleJob.options(options).perform_later(args) # Enqueued with options
+
+SampleJob.perform_now(args)                    # Enqueued on failure, if retries configured
+
+ActiveJob.perform_all_later(                   # All enqueued without options
+  SampleJob.new, SampleJob.new
+)
+ActiveJob.perform_all_later(                   # All enqueued with options
+  SampleJob.new, SampleJob.new, options:
+)
+
+SampleJob                                      # All enqueued without options
+  .set(options)
+  .perform_all_later(
+    SampleJob.new, SampleJob.new
+  )
+SampleJob                                      # All enqueued with options
+  .set(options)
+  .perform_all_later(
+    SampleJob.new, SampleJob.new, options:
+  )
+```
+
+### Executing Jobs
+
+```ruby
+SampleJob.new.perform_now # Performed 
+```

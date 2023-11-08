@@ -5,8 +5,8 @@ Fail build on low test coverage
 Test available method (nulls, etc.)
 Add a failing query method.
 Add discarded extension. Maybe add a discarded query method.
-Lower ActiveJob and Ruby requirements.
 Add perform_on_commit extension
 Add features section to README.md.
 Add motivation section to README.md.
 Add ability to run tests on several Ruby/ActiveJob versions.
+Use pre version when in development.

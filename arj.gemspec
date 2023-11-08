@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     'rubygems_mfa_required' => 'true',
     'source_code_uri'       => 'https://github.com/nicholasdower/arj'
   }
-  spec.required_ruby_version = '>= 3.2.2'
+  spec.required_ruby_version = '>= 2.7.0'
 
   spec.files = Dir['lib/**/*']
 

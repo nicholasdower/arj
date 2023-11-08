@@ -74,6 +74,11 @@ module Arj
       include Query
       include Persistence
 
+      def initialize(*args)
+        proc = args[0].is_a?(Proc) ? args.shift : nil
+        super.tap { Job.on_perform[job_id] = proc if proc }
+      end
+
       @on_perform = {}
       @global_executions = {}
       class << self
@@ -93,9 +98,9 @@ module Arj
         # Overridden to add support for +Proc+ arguments.
         #
         # @return [Arj::Test::Job, FalseClass]
-        def perform_later(*args, **kwargs, &)
+        def perform_later(*args)
           proc = args[0].is_a?(Proc) ? args.shift : nil
-          super(*args, **kwargs, &).tap { |job| Job.on_perform[job.job_id] = proc if proc }
+          super.tap { |job| Job.on_perform[job.job_id] = proc if proc }
         end
 
         # Returns the total number of executions across all jobs.

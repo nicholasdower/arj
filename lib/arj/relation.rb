@@ -20,8 +20,8 @@ module Arj
     # Delegates to the wrapped ActiveRecord relation and maps record objects to job objects.
     #
     # @param method [Symbol]
-    def method_missing(method, *, &)
-      result = @ar_relation.send(method, *, &)
+    def method_missing(method, *args)
+      result = @ar_relation.send(method, *args)
       case result
       when ActiveRecord::Relation
         Relation.new(result)
@@ -43,8 +43,8 @@ module Arj
     # Implemented to ensure Arj::Relation#method can be used to retrieve methods provided by ActiveRecord relations.
     #
     # @return [Boolean]
-    def respond_to_missing?(*)
-      @ar_relation.respond_to?(*)
+    def respond_to_missing?(*several_variants)
+      @ar_relation.respond_to?(*several_variants)
     end
 
     # Updates each matching job with the specified attributes.

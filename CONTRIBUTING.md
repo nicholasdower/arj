@@ -1,6 +1,6 @@
 # Contributing
 
-Install Ruby 3.2.2, then run `make help`:
+Install Ruby >= 2.7.0, then run `make help`:
 
 ```
                     _
