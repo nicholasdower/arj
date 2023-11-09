@@ -32,7 +32,7 @@ module Arj
     # @param logger [Logger] used to log worker progress
     def initialize(
       description: 'Arj::Worker(*)',
-      source: -> { Arj.available.first },
+      source: -> { Arj.todo.first },
       sleep_delay: DEFAULT_SLEEP_DELAY,
       logger: ActiveJob::Base.logger
     )

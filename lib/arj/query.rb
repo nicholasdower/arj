@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 require_relative '../arj'
-require_relative 'query_documentation'
+require_relative 'documentation/active_record_relation'
+require_relative 'documentation/arj_relation'
 require_relative 'relation'
 
 module Arj
-  # ActiveRecord-style query methods (+where+, +first+, +last+, etc.), but for jobs.
+  # A module which, when included, adds class methods used to query jobs.
   #
   # Example usage:
   #   class SampleJob < ActiveJob::Base
@@ -16,17 +17,16 @@ module Arj
   #   job = job.where(queue_name: 'some queue').first
   #   job.perform_now
   #
-  # This module is also included in the {Arj} module.
+  # This module is also included in the {Arj} module:
   #
-  # Example usage:
   #   class SampleJob < ActiveJob::Base; end
   #
   #   SampleJob.set(queue_name: 'some queue').perform_later('some arg')
   #   job = Arj.where(queue_name: 'some queue').first
   #   job.perform_now
   #
-  # Note that all query methods delegate to {Query::ClassMethods.all}. Override {Query::ClassMethods.all}
-  # to customize. For instance, to create a job group:
+  # Note that all query methods delegate to {Query::ClassMethods.all}. This method can be overridden to create a
+  # customized query interface. For instance, to create a job group:
   #   class FooBarJob < ActiveJob::Base; end
   #   class FooBazJob < ActiveJob::Base; end
   #
@@ -42,15 +42,15 @@ module Arj
   #   FooBazJob.perform_later
   #   FooJobs.available.first # Returns the first available job of type FooBarJob or FooBazJob.
   #
-  # See: {ClassMethods}, {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation}
+  # See {Arj::Relation}.
   module Query
     # Class methods which are automatically added when {Query} is included in a class.
-    #
-    # See: {Arj::Query} and {Arj::QueryDocumentation}
     module ClassMethods
-      include Arj::QueryDocumentation
-
+      include Arj::Documentation::ActiveRecordRelation
       delegate(*ActiveRecord::Querying::QUERYING_METHODS, to: :all)
+
+      include Arj::Documentation::ArjRelation
+      delegate(*Arj::Relation::QUERY_METHODS, to: :all)
 
       # Returns a {Relation} scope object for all jobs.
       #
@@ -63,25 +63,6 @@ module Arj
         else
           Relation.new(Arj.record_class.where(job_class: name).all)
         end
-      end
-
-      # Returns a {Relation} scope for available jobs.
-      #
-      # Jobs are considered available if +scheduled_at+ is null or in the past. Jobs are ordered by +priority+
-      # (ascending, nulls last) followed by +created_at+ (ascending).
-      #
-      # The following optional criteria may be specified:
-      # - One or more queues
-      # - The maximum number of executions (exclusive)
-      #
-      # @param queue_name [String, Array]
-      # @param max_executions [Numeric]
-      # @return [ActiveJob::Base]
-      def available(queue_name: nil, max_executions: nil)
-        relation = where('scheduled_at is null or scheduled_at < ?', Time.zone.now)
-        relation = relation.where(queue_name: queue_name) if queue_name
-        relation = relation.where('executions < ?', max_executions) if max_executions
-        relation.order(Arel.sql('CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority, created_at'))
       end
     end
 

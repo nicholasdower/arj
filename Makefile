@@ -67,8 +67,8 @@ watch: .install
 
 .PHONY: doc
 doc: .install
-	@bundle exec script/generate-query-documentation.rb
-	@yard 
+	@ruby -r ./lib/arj/documentation/generator.rb -e Arj::Documentation::Generator.generate_all
+	@yard
 
 .PHONY: open-doc
 open-doc:
@@ -76,7 +76,7 @@ open-doc:
 
 .PHONY: watch-doc
 watch-doc:
-	@./script/rerun $(WATCH_FILES) README.md -not -name query_documentation.rb -type f -- make doc
+	@./script/rerun $(WATCH_FILES) README.md -not -path 'lib/arj/documentation/\*' -type f -- make doc
 
 .PHONY: clean-gems
 clean-gems:

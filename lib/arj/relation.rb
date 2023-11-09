@@ -3,15 +3,26 @@
 require 'active_record'
 require_relative 'persistence'
 require_relative '../arj'
+require_relative '../arj/documentation/active_record_relation'
 
 module Arj
-  # Wrapper for +ActiveRecord::Relation+ which maps record objects to job objects.
+  # A wrapper for {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation} which
+  # returns jobs rather than records. Also provides additional, Arj-specific query methods like {#todo todo},
+  # {#failing failing}, {#queue queue}.
   #
-  # Note that record will not be mapped to jobs if they are missing one or more attributes (for instance when using
-  # +select+). In this case, the record objects will be returned directly.
+  # Note that records will not be mapped to jobs if they are missing one or more attributes (for instance when using
+  # {#select select}).
   #
-  # See: {Query}, {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation}
+  # See: {Query}
   class Relation
+    # List of Arj-specific query methods.
+    #
+    # @return [Array<Symbol>]
+    QUERY_METHODS = %i[failing queue executable todo].freeze
+
+    include Arj::Documentation::ActiveRecordRelation
+    include Arj::Documentation::Enumerable
+
     # Returns an Arj::Relation which wraps the specified ActiveRecord Relation, WhereChain, etc.
     def initialize(ar_relation)
       @ar_relation = ar_relation
@@ -20,24 +31,16 @@ module Arj
     # Delegates to the wrapped ActiveRecord relation and maps record objects to job objects.
     #
     # @param method [Symbol]
-    def method_missing(method, *args)
-      result = @ar_relation.send(method, *args)
-      case result
-      when ActiveRecord::Relation
-        Relation.new(result)
-      when Array
-        result.map do |item|
-          if item.is_a?(Arj.record_class)
-            maybe_to_job(item)
-          else
-            item
-          end
-        end
-      when Arj.record_class
-        maybe_to_job(result)
-      else
-        result
-      end
+    def method_missing(method, *args, &block)
+      result = if block
+                 @ar_relation.send(method, *args) do |*inner_args, &inner_block|
+                   inner_args = inner_args.map { |arg| map_result(arg) }
+                   block.call(*inner_args, &inner_block)
+                 end
+               else
+                 @ar_relation.send(method, *args)
+               end
+      map_result(result)
     end
 
     # Implemented to ensure Arj::Relation#method can be used to retrieve methods provided by ActiveRecord relations.
@@ -45,6 +48,48 @@ module Arj
     # @return [Boolean]
     def respond_to_missing?(*several_variants)
       @ar_relation.respond_to?(*several_variants)
+    end
+
+    # Returns a {Relation} scope for jobs which have been executed one or more times.
+    #
+    # @return [Arj::Relation]
+    def failing
+      where('executions > ?', 0)
+    end
+
+    # Returns a {Relation} scope for jobs in the specified queue(s).
+    #
+    # @param queues [Array<String]
+    # @return [Arj::Relation]
+    def queue(*queues)
+      where(queue_name: queues)
+    end
+
+    # Returns a {Relation} scope for jobs with a +scheduled_at+ that is either +null+ or in the past.
+    #
+    # @return [Arj::Relation]
+    def executable
+      where('scheduled_at is null or scheduled_at <= ?', Time.zone.now)
+    end
+
+    # Returns a {Relation} scope for {executable} jobs in order.
+    #
+    # Jobs are ordered by:
+    # - +priority+ (+null+ last)
+    # - +scheduled_at+ (+null+ last)
+    # - +created_at+
+    # - +job_id+
+    #
+    # @return [Arj::Relation]
+    def todo
+      executable.order(Arel.sql(
+                         <<~SQL.squish
+                           CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
+                           CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
+                           created_at,
+                           job_id
+                         SQL
+                       ))
     end
 
     # Updates each matching job with the specified attributes.
@@ -85,6 +130,31 @@ module Arj
     end
 
     private
+
+    def map_result(result)
+      case result
+      when ActiveRecord::Relation
+        Relation.new(result)
+      when Enumerator
+        Enumerator.new do |yielder|
+          result.each do |yielded|
+            yielder << map_result(yielded)
+          end
+        end
+      when Array
+        result.map do |item|
+          if item.is_a?(Arj.record_class)
+            maybe_to_job(item)
+          else
+            item
+          end
+        end
+      when Arj.record_class
+        maybe_to_job(result)
+      else
+        result
+      end
+    end
 
     def maybe_to_job(record)
       # If all attributes are present, return a job, otherwise, return the record.

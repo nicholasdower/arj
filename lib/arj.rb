@@ -2,10 +2,10 @@
 
 require 'active_record'
 require_relative 'arj/arj_adapter'
+require_relative 'arj/documentation'
 require_relative 'arj/extensions'
 require_relative 'arj/persistence'
 require_relative 'arj/query'
-require_relative 'arj/query_documentation'
 require_relative 'arj/relation'
 require_relative 'arj/version'
 require_relative 'arj/worker'

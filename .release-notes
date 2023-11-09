@@ -1,6 +1,8 @@
-- Lowered Ruby version requirement from `3.2.2` to `2.7.0`.
+- Lower Ruby version requirement from `3.2.2` to `2.7.0`.
 - Add `Arj::QueryDocumentation` to provide documentation and autocomplete for `ActiveRecord::Relation` query methods.
 - Add support for queries like `Arj.select(:job_class)`. `Arj::Relation` now returns records in this case.
 - Add `Arj::Extensions::Timeout`.
 - Remove `Arj::Job`. Customization is now achieved via `ActiveJob` calbacks.
 - Fix bug causing jobs to be discarded when an error occurrs on re-enqueue.
+- Fix `Enumerable` support in `ArjRelation`. Add documentation.
+- Add Arj-specific query methods: `todo`, `failing`, `executable`, `queue`.
