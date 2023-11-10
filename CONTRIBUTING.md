@@ -20,7 +20,7 @@ Targets:
   rspec:       Run all specs
   coverage:    Run all specs with coverage
   precommit:   Run lint and specs
-  watch:       Run lint, specs and generate documentation on file change
+  watch:       Run lint and specs on file change
   doc:         Generate documentation
   open-doc:    Open documentation
   watch-doc:   Generate documentation on file change

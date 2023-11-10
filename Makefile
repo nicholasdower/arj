@@ -20,7 +20,7 @@ help:
 	@echo '  rspec:       Run all specs'
 	@echo '  coverage:    Run all specs with coverage'
 	@echo '  precommit:   Run lint and specs'
-	@echo '  watch:       Run lint, specs and generate documentation on file change'
+	@echo '  watch:       Run lint and specs on file change'
 	@echo '  doc:         Generate documentation'
 	@echo '  open-doc:    Open documentation'
 	@echo '  watch-doc:   Generate documentation on file change'
@@ -63,7 +63,7 @@ precommit: .install
 
 .PHONY: watch
 watch: .install
-	@./script/rerun $(WATCH_FILES) -type f -- make precommit
+	@./script/rerun $(WATCH_FILES) -not -path 'lib/arj/documentation/\*' -type f -- make rspec
 
 .PHONY: doc
 doc: .install
