@@ -12,6 +12,10 @@ describe 'performing' do
       context 'original job' do
         let(:job) { original_job }
 
+        it 'executes the job' do
+          expect { subject }.to change { job.global_executions }.from(0).to(1)
+        end
+
         it 'returns the result' do
           expect(subject).to eq('some_arg')
         end
@@ -19,6 +23,10 @@ describe 'performing' do
 
       context 'queried job' do
         let(:job) { Arj.last }
+
+        it 'executes the job' do
+          expect { subject }.to change { job.global_executions }.from(0).to(1)
+        end
 
         it 'returns the result' do
           expect(subject).to eq('some_arg')
@@ -32,6 +40,10 @@ describe 'performing' do
       context 'original job' do
         let(:job) { original_job }
 
+        it 'executes the job' do
+          expect { subject }.to change { job.global_executions }.from(0).to(1)
+        end
+
         it 'returns the result' do
           expect(subject).to eq('some_arg')
         end
@@ -39,6 +51,10 @@ describe 'performing' do
 
       context 'queried job' do
         let(:job) { Arj.last }
+
+        it 'executes the job' do
+          expect { subject }.to change { job.global_executions }.from(0).to(1)
+        end
 
         it 'returns the result' do
           expect(subject).to eq('some_arg')
@@ -54,8 +70,29 @@ describe 'performing' do
       expect { subject }.not_to change(Job, :count).from(0)
     end
 
+    it 'executes the job' do
+      expect { subject }.to change { Arj::Test::Job.global_executions.values.sum }.from(0).to(1)
+    end
+
     it 'returns the result' do
       expect(subject).to eq('some_arg')
+    end
+
+    context 'when the job enqueues itself while executing' do
+      let(:subject) { Arj::SampleJob.perform_now }
+
+      before do
+        stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
+        Arj::SampleJob.class_eval do
+          def perform
+            enqueue
+          end
+        end
+      end
+
+      it 'enqueues the job' do
+        expect { subject }.to change(Job, :count).from(0).to(1)
+      end
     end
   end
 
@@ -67,6 +104,10 @@ describe 'performing' do
 
       it 'does not persist a job' do
         expect { subject }.not_to change(Job, :count).from(0)
+      end
+
+      it 'executes the job' do
+        expect { subject }.to change { job.global_executions }.from(0).to(1)
       end
 
       it 'returns the result' do
@@ -107,6 +148,14 @@ describe 'performing' do
         it 'raises' do
           expect { subject }.to raise_error(ActiveRecord::RecordNotFound, /Couldn't find Job with 'id'/)
         end
+      end
+    end
+
+    context 'when the job re-enqueues itself while executing' do
+      let!(:job) { Arj::Test::Job.perform_later(-> { job.enqueue }) }
+
+      it 'does not delete the database record' do
+        expect { subject }.not_to change(Job, :count).from(1)
       end
     end
   end

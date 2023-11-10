@@ -6,3 +6,4 @@
 - Fix bug causing jobs to be discarded when an error occurrs on re-enqueue.
 - Fix `Enumerable` support in `ArjRelation`. Add documentation.
 - Add Arj-specific query methods: `todo`, `failing`, `executable`, `queue`.
+- Allow jobs to enqueue / re-enqueue themselves while executing.

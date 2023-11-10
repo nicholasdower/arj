@@ -82,8 +82,13 @@ module Arj
         job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
         job.deserialize(job_data)
         unless job.singleton_class.instance_variable_get(:@__arj)
+          job.singleton_class.before_perform do |job|
+            # Setting successfully_enqueued to false in order to detect when a job is re-enqueued during perform.
+            job.successfully_enqueued = false
+          end
+
           job.singleton_class.after_perform do |job|
-            Arj.record_class.find(job.provider_job_id).destroy!
+            Arj.record_class.find(job.provider_job_id).destroy! unless job.successfully_enqueued?
           end
 
           job.singleton_class.after_discard do |job, _exception|

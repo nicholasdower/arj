@@ -7,7 +7,6 @@ Add features section to README.md.
 Add motivation section to README.md.
 Add ability to run tests on several Ruby/ActiveJob versions.
 Use pre version when in development.
-Allow a job to reenqueue itself. Use successfully_enqueued?.
 Add indexes
 Store last error in a StandardError object
 Allow some tests to run against other backends. Use tags.
