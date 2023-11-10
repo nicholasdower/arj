@@ -14,12 +14,12 @@ describe Arj::Documentation::Generator do
 
         module Arj
           module SampleModule
+            # @!method executable
+            #   See: {Arj::Relation#executable}
             # @!method failing
             #   See: {Arj::Relation#failing}
             # @!method queue
             #   See: {Arj::Relation#queue}
-            # @!method executable
-            #   See: {Arj::Relation#executable}
             # @!method todo
             #   See: {Arj::Relation#todo}
           end
@@ -58,12 +58,12 @@ describe Arj::Documentation::Generator do
 
           module Arj
             module SampleModule
+              # @!method executable
+              #   See: {Arj::Relation#executable}
               # @!method failing
               #   See: {Arj::Relation#failing}
               # @!method queue
               #   See: {Arj::Relation#queue}
-              # @!method executable
-              #   See: {Arj::Relation#executable}
             end
           end
         RUBY

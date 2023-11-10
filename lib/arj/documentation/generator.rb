@@ -41,7 +41,7 @@ module Arj
         out.puts(head)
 
         found = methods.intersection(source.public_instance_methods)
-        found.each do |method|
+        found.sort.each do |method|
           out.puts("#{indentation}  # @!method #{method}")
           out.puts("#{indentation}  #   #{format(see_format, class: source, method: method)}")
         end
