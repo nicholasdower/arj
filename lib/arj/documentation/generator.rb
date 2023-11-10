@@ -21,11 +21,14 @@ module Arj
           Arj::Relation::QUERY_METHODS,
           'See: {%<class>s#%<method>s}'
         )
+        enumerable_methods = ::Enumerable.public_instance_methods.select do |m|
+          ::Enumerable.instance_method(m).source_location.nil?
+        end
         Generator.generate(
           'lib/arj/documentation/enumerable.rb',
           Arj::Documentation::Enumerable.name,
           ::Enumerable,
-          ::Enumerable.public_instance_methods - ActiveRecord::Querying::QUERYING_METHODS,
+          enumerable_methods - ActiveRecord::Querying::QUERYING_METHODS,
           'See: {https://rubydoc.info/stdlib/core/Enumerable#%<method>s-instance_method %<class>s#%<method>s}'
         )
       end

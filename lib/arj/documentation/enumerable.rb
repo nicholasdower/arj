@@ -6,8 +6,6 @@ module Arj
     module Enumerable
       # @!method all?
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#all?-instance_method Enumerable#all?}
-      # @!method as_json
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#as_json-instance_method Enumerable#as_json}
       # @!method chain
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#chain-instance_method Enumerable#chain}
       # @!method chunk
@@ -20,8 +18,6 @@ module Arj
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#collect_concat-instance_method Enumerable#collect_concat}
       # @!method compact
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#compact-instance_method Enumerable#compact}
-      # @!method compact_blank
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#compact_blank-instance_method Enumerable#compact_blank}
       # @!method cycle
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#cycle-instance_method Enumerable#cycle}
       # @!method detect
@@ -42,8 +38,6 @@ module Arj
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#each_with_object-instance_method Enumerable#each_with_object}
       # @!method entries
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#entries-instance_method Enumerable#entries}
-      # @!method exclude?
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#exclude?-instance_method Enumerable#exclude?}
       # @!method filter
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#filter-instance_method Enumerable#filter}
       # @!method filter_map
@@ -62,12 +56,6 @@ module Arj
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#group_by-instance_method Enumerable#group_by}
       # @!method include?
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#include?-instance_method Enumerable#include?}
-      # @!method including
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#including-instance_method Enumerable#including}
-      # @!method index_by
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#index_by-instance_method Enumerable#index_by}
-      # @!method index_with
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#index_with-instance_method Enumerable#index_with}
       # @!method inject
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#inject-instance_method Enumerable#inject}
       # @!method lazy
@@ -114,10 +102,6 @@ module Arj
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#to_a-instance_method Enumerable#to_a}
       # @!method to_h
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#to_h-instance_method Enumerable#to_h}
-      # @!method to_json
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#to_json-instance_method Enumerable#to_json}
-      # @!method to_set
-      #   See: {https://rubydoc.info/stdlib/core/Enumerable#to_set-instance_method Enumerable#to_set}
       # @!method uniq
       #   See: {https://rubydoc.info/stdlib/core/Enumerable#uniq-instance_method Enumerable#uniq}
       # @!method zip
