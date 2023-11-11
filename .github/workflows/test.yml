@@ -16,13 +16,27 @@ on:
       - '!/.github/workflows/release.yml'
 
 jobs:
-  test:
-    name: Build, Lint & Test
+  test-2-7-0:
+    name: Build, Lint & Test (2.7.0)
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7.0'
+      - run: bundle install
+      - run: bundle exec rubocop
+      - run: bundle exec rspec
+  test-3-2-2:
+    name: Build, Lint & Test (3.2.2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2.2'
       - run: bundle install
       - run: bundle exec rubocop
       - run: bundle exec rspec
