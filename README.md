@@ -22,6 +22,7 @@ For more information on ActiveJob, see:
   * [LastError](#lasterror)
   * [Shard](#shard)
   * [Timeout](#timeout)
+  * [Database ID](#database-id)
 - [Testing](#testing)
 
 ## Setup
@@ -37,7 +38,7 @@ Apply a database migration:
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
-    create_table :jobs do |table|
+    create_table :jobs, id: :string, primary_key: :job_id do |table|
       table.string   :job_class,            null: false
       table.string   :job_id,               null: false
       table.string   :queue_name
@@ -49,8 +50,6 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.string   :timezone,             null: false
       table.datetime :enqueued_at,          null: false
       table.datetime :scheduled_at
-
-      table.timestamps
     end
   end
 
@@ -59,6 +58,8 @@ class CreateJobs < ActiveRecord::Migration[7.1]
   end
 end
 ```
+
+**Note**: The default table schema does not include an ID column. A schema with an ID column can be found [here](#database-id).
 
 Configure the queue adapter.
 
@@ -169,7 +170,7 @@ Arj::Worker.new.start
 To start a worker with custom criteria:
 
 ```ruby
-Arj::Worker.new(description: 'Arj::Worker(first)', source: -> { Arj.first }).start
+Arj::Worker.new(description: 'Arj::Worker(foo)', source: -> { Arj.queue('foo').todo }).start
 ```
 
 ## Extensions
@@ -296,6 +297,38 @@ class SampleJob < ActiveJob::Base
   job.perform_now
 end
 ```
+
+### Database ID
+
+To create the jobs table with an id column, use this alternative migration:
+
+```ruby
+class CreateJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    create_table :jobs do |table|
+      table.string   :job_id,               null: false
+      table.string   :job_class,            null: false
+      table.string   :job_id,               null: false
+      table.string   :queue_name
+      table.integer  :priority
+      table.text     :arguments,            null: false
+      table.integer  :executions,           null: false
+      table.text     :exception_executions, null: false
+      table.string   :locale,               null: false
+      table.string   :timezone,             null: false
+      table.datetime :enqueued_at,          null: false
+      table.datetime :scheduled_at
+    end
+    add_index :jobs, :job_id, unique: true
+  end
+
+  def self.down
+    drop_table :jobs
+  end
+end
+```
+
+This will result in the `provider_job_id` job attribute being populated.
 
 ## Testing
 

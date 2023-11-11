@@ -67,8 +67,7 @@ describe Arj::Relation do
         end
 
         it 'returns the jobs' do
-          expect(subject.first.provider_job_id).to eq(Job.first.id)
-          expect(subject.second.provider_job_id).to eq(Job.second.id)
+          expect(subject.map(&:job_id)).to contain_exactly(Job.first.job_id, Job.second.job_id)
         end
       end
 
@@ -84,8 +83,7 @@ describe Arj::Relation do
         end
 
         it 'returns the jobs' do
-          expect(subject.first.provider_job_id).to eq(Job.first.id)
-          expect(subject.second.provider_job_id).to eq(Job.second.id)
+          expect(subject.map(&:job_id)).to contain_exactly(Job.first.job_id, Job.second.job_id)
         end
       end
 
@@ -394,7 +392,7 @@ describe Arj::Relation do
       end
 
       context 'when scheduled_at times are equal' do
-        context 'when created_at times are not equal' do
+        context 'when enqueued_at times are not equal' do
           before do
             Arj::Test::Job.set(priority: 1, queue: 1, wait: 3.seconds).perform_later
             Timecop.travel(1.second)
@@ -406,25 +404,8 @@ describe Arj::Relation do
             Timecop.travel(1.second)
           end
 
-          it 'returns the jobs in creation order' do
+          it 'returns the jobs in enqueued order' do
             expect(queues).to eq([1, 2, 3, 4])
-          end
-        end
-
-        context 'when created_at times are equal' do
-          let(:job_ids) { subject.map(&:job_id) }
-
-          before do
-            Arj::Test::Job.set(priority: 1, queue: 3, wait: nil).perform_later.update!(job_id: 'job4')
-            Arj::Test::Job.set(priority: 1, queue: 4, wait: nil).perform_later.update!(job_id: 'job3')
-            Arj::Test::Job.set(priority: 1, queue: 1, wait: 3.seconds).perform_later.update!(job_id: 'job2')
-            Arj::Test::Job.set(priority: 1, queue: 2, wait: 3.seconds).perform_later.update!(job_id: 'job1')
-            Timecop.travel(3.seconds)
-          end
-
-          it 'returns the jobs in job_id order' do
-            subject
-            expect(job_ids).to eq(%w[job1 job2 job3 job4])
           end
         end
       end

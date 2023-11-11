@@ -32,7 +32,7 @@ describe Arj::Test do
         end
 
         it 'deletes the job' do
-          expect { subject rescue nil }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+          expect { subject rescue nil }.to change { Job.exists?(job.job_id) }.from(true).to(false)
         end
       end
 
@@ -44,7 +44,7 @@ describe Arj::Test do
         end
 
         it 'deletes the job' do
-          expect { subject rescue nil }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+          expect { subject rescue nil }.to change { Job.exists?(job.job_id) }.from(true).to(false)
         end
       end
 
@@ -56,7 +56,7 @@ describe Arj::Test do
         end
 
         it 'deletes the job' do
-          expect { subject rescue nil }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+          expect { subject rescue nil }.to change { Job.exists?(job.job_id) }.from(true).to(false)
         end
       end
 
@@ -68,7 +68,7 @@ describe Arj::Test do
         end
 
         it 'deletes the job' do
-          expect { subject rescue nil }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+          expect { subject rescue nil }.to change { Job.exists?(job.job_id) }.from(true).to(false)
         end
       end
 
@@ -80,7 +80,7 @@ describe Arj::Test do
         end
 
         it 'deletes the job' do
-          expect { subject rescue nil }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+          expect { subject rescue nil }.to change { Job.exists?(job.job_id) }.from(true).to(false)
         end
       end
 
@@ -92,7 +92,7 @@ describe Arj::Test do
         end
 
         it 're-enqueues the job' do
-          expect { subject }.not_to change { Job.exists?(job.provider_job_id) }.from(true)
+          expect { subject }.not_to change { Job.exists?(job.job_id) }.from(true)
         end
       end
 
@@ -104,7 +104,7 @@ describe Arj::Test do
         end
 
         it 'deletes the job' do
-          expect { subject rescue nil }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+          expect { subject rescue nil }.to change { Job.exists?(job.job_id) }.from(true).to(false)
         end
       end
     end

@@ -79,8 +79,7 @@ describe 'enqueueing' do
 
     it 'persists all jobs' do
       expect { subject }.to change(Job, :count).from(0).to(2)
-      expect(Arj.first.arguments.first).to eq('one')
-      expect(Arj.second.arguments.first).to eq('two')
+      expect(Arj.all.map(&:arguments).map(&:first)).to contain_exactly('one', 'two')
     end
   end
 end

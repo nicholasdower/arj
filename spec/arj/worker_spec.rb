@@ -24,7 +24,7 @@ describe Arj::Worker do
       end
 
       it 'does not delete other jobs' do
-        expect { subject }.not_to change { Job.exists?(jobs.first.provider_job_id) }.from(true)
+        expect { subject }.not_to change { Job.exists?(jobs.first.job_id) }.from(true)
       end
     end
 
@@ -40,7 +40,7 @@ describe Arj::Worker do
       end
 
       it 'deletes the job' do
-        expect { subject }.to change { Job.exists?(jobs.first.provider_job_id) }.from(true).to(false)
+        expect { subject }.to change { Job.exists?(jobs.first.job_id) }.from(true).to(false)
       end
 
       it 'does not executes other jobs' do
@@ -48,7 +48,7 @@ describe Arj::Worker do
       end
 
       it 'does not delete other jobs' do
-        expect { subject }.not_to change { Job.exists?(jobs.second.provider_job_id) }.from(true)
+        expect { subject }.not_to change { Job.exists?(jobs.second.job_id) }.from(true)
       end
 
       it 'returns true' do
@@ -86,11 +86,11 @@ describe Arj::Worker do
       end
 
       it 'deletes the jobs' do
-        expect(Job.exists?(jobs.first.provider_job_id)).to eq(true)
-        expect(Job.exists?(jobs.second.provider_job_id)).to eq(true)
+        expect(Job.exists?(jobs.first.job_id)).to eq(true)
+        expect(Job.exists?(jobs.second.job_id)).to eq(true)
         subject
-        expect(Job.exists?(jobs.first.provider_job_id)).to eq(false)
-        expect(Job.exists?(jobs.second.provider_job_id)).to eq(false)
+        expect(Job.exists?(jobs.first.job_id)).to eq(false)
+        expect(Job.exists?(jobs.second.job_id)).to eq(false)
       end
 
       it 'does not executes other jobs' do
@@ -98,7 +98,7 @@ describe Arj::Worker do
       end
 
       it 'does not delete other jobs' do
-        expect { subject }.not_to change { Job.exists?(jobs.third.provider_job_id) }.from(true)
+        expect { subject }.not_to change { Job.exists?(jobs.third.job_id) }.from(true)
       end
 
       it 'returns true' do

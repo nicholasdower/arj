@@ -9,10 +9,6 @@ shared_examples 'job fields' do |expected_clazz|
     expect(subject.job_id).not_to be_empty
   end
 
-  it 'has provider_job_id' do
-    expect(subject.provider_job_id).to eq(Job.last.id)
-  end
-
   context 'when queue not specified' do
     it 'has default queue_name' do
       expect(subject.queue_name).to eq('default')

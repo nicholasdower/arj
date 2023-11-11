@@ -77,19 +77,19 @@ module Arj
     # Jobs are ordered by:
     # - +priority+ (+null+ last)
     # - +scheduled_at+ (+null+ last)
-    # - +created_at+
-    # - +job_id+
+    # - +enqueued_at+
     #
     # @return [Arj::Relation]
     def todo
-      executable.order(Arel.sql(
-                         <<~SQL.squish
-                           CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
-                           CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
-                           created_at,
-                           job_id
-                         SQL
-                       ))
+      executable.order(
+        Arel.sql(
+          <<~SQL.squish
+            CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
+            CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
+            enqueued_at
+          SQL
+        )
+      )
     end
 
     # Updates each matching job with the specified attributes.

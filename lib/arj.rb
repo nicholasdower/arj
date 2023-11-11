@@ -46,16 +46,14 @@ module Arj
 
     # @return [Boolean] +true+ if the specified job has a corresponding record in the database
     def exists?(job)
-      job.provider_job_id.nil? ? false : Arj.record_class.exists?(job.provider_job_id)
+      Arj.record_class.exists?(job.job_id)
     end
 
     # Reloads the attributes of the specified job from the database.
     #
     # @return [ActiveJob::Base] the specified job, updated
     def reload(job)
-      raise 'record not set' if job.provider_job_id.nil?
-
-      record = Arj.record_class.find(job.provider_job_id)
+      record = Arj.record_class.find(job.job_id)
       Persistence.from_record(record, job)
       job
     rescue ActiveRecord::RecordNotFound
@@ -74,9 +72,7 @@ module Arj
     #
     # @return [Boolean] +true+
     def save!(job)
-      raise 'record not set' if job.provider_job_id.nil?
-
-      record = Arj.record_class.find(job.provider_job_id)
+      record = Arj.record_class.find(job.job_id)
       record.update!(Persistence.record_attributes(job)).tap { Persistence.from_record(record, job) }
     end
 
@@ -91,10 +87,10 @@ module Arj
     # @return [Boolean] +true+
     def update!(job, attributes)
       raise "invalid attributes: #{attributes}" unless attributes.is_a?(Hash)
-      raise 'record not set' if job.provider_job_id.nil?
 
+      job_id = job.job_id
       attributes.each { |k, v| job.send("#{k}=".to_sym, v) }
-      record = Arj.record_class.find(job.provider_job_id)
+      record = Arj.record_class.find(job_id)
       record.update!(Persistence.record_attributes(job))
     end
 
@@ -108,9 +104,7 @@ module Arj
     #
     # @return [ActiveJob::Base] the specified job
     def destroy!(job)
-      raise 'record not set' if job.provider_job_id.nil?
-
-      record = Arj.record_class.find(job.provider_job_id)
+      record = Arj.record_class.find(job.job_id)
       record.destroy!
       job.successfully_enqueued = false
       job
@@ -118,8 +112,6 @@ module Arj
 
     # @return [Boolean] +true+ if the specified job has been deleted from the database
     def destroyed?(job)
-      raise 'record not set' if job.provider_job_id.nil?
-
       !exists?(job)
     end
   end

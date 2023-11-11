@@ -14,5 +14,4 @@ Allow query interface to be used with other backends.
 Rewrite release script in Ruby
 Add a test workflow for Ruby 2.7.0.
 Document execute method in cheatsheet.
-Use job_id as database ID. Stop using provider_job_id.
 Use a class attribute for the worker logger.

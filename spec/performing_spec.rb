@@ -146,7 +146,7 @@ describe 'performing' do
         before { Job.destroy_all }
 
         it 'raises' do
-          expect { subject }.to raise_error(ActiveRecord::RecordNotFound, /Couldn't find Job with 'id'/)
+          expect { subject }.to raise_error(ActiveRecord::RecordNotFound, /Couldn't find Job with 'job_id'/)
         end
       end
     end

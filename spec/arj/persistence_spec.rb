@@ -44,18 +44,10 @@ describe Arj::Persistence do
         let!(:job) { Arj::Test::Job.perform_later }
 
         context 'when the database record has been updated' do
-          before { Job.update!(job.provider_job_id, queue_name: 'some queue') }
+          before { Job.update!(job.job_id, queue_name: 'some queue') }
 
           it 'returns the updated job' do
             expect(subject.queue_name).to eq('some queue')
-          end
-        end
-
-        context 'when the database record never existed' do
-          let!(:job) { Arj::Test::Job.new }
-
-          it 'raises' do
-            expect { subject }.to raise_error(StandardError, 'record not set')
           end
         end
 
@@ -82,14 +74,6 @@ describe Arj::Persistence do
 
           it 'returns true' do
             expect(subject).to eq(true)
-          end
-        end
-
-        context 'when the database record never existed' do
-          let!(:job) { Arj::Test::Job.new }
-
-          it 'raises' do
-            expect { subject }.to raise_error(StandardError, 'record not set')
           end
         end
 
@@ -164,14 +148,6 @@ describe Arj::Persistence do
           end
         end
 
-        context 'when the database record never existed' do
-          let!(:job) { Arj::Test::Job.new }
-
-          it 'raises' do
-            expect { subject }.to raise_error(StandardError, 'record not set')
-          end
-        end
-
         context 'when the database record has been deleted' do
           before { Job.destroy_all }
 
@@ -188,19 +164,11 @@ describe Arj::Persistence do
 
         context 'when the database record exists' do
           it 'deletes the record' do
-            expect { subject }.to change { Job.exists?(job.provider_job_id) }.from(true).to(false)
+            expect { subject }.to change { Job.exists?(job.job_id) }.from(true).to(false)
           end
 
           it 'sets successfully_enqueued to false' do
             expect { subject }.to change(job, :successfully_enqueued?).from(true).to(false)
-          end
-        end
-
-        context 'when the database record never existed' do
-          let!(:job) { Arj::Test::Job.new }
-
-          it 'raises' do
-            expect { subject }.to raise_error(StandardError, 'record not set')
           end
         end
 
@@ -224,14 +192,6 @@ describe Arj::Persistence do
           end
         end
 
-        context 'when the database record never existed' do
-          let!(:job) { Arj::Test::Job.new }
-
-          it 'raises' do
-            expect { subject }.to raise_error(StandardError, 'record not set')
-          end
-        end
-
         context 'when the database record has been deleted' do
           before { Job.destroy_all }
 
@@ -246,13 +206,83 @@ describe Arj::Persistence do
   context '.from_record' do
     subject { Arj::Persistence.from_record(record, job) }
 
-    let(:job) { Arj.first }
-    let(:record) { Job.first }
+    let(:job) { Arj.sole }
+    let(:record) { Job.sole }
 
     before { Arj::Test::Job.perform_later('some arg') }
 
     it 'returns the job' do
       expect(subject).to be_a(Arj::Test::Job)
+    end
+
+    context 'when record_class has an ID' do
+      let(:record_id) { 1 }
+
+      before do
+        TestDb.migrate(CreateJobs, :down)
+        TestDb.migrate(CreateJobsWithId, :up)
+        Arj::Test::Job.perform_later
+      end
+
+      after do
+        TestDb.migrate(CreateJobsWithId, :down)
+        TestDb.migrate(CreateJobs, :up)
+
+        # Clean up some left over ActiveRecord state that causes warnings.
+        Job.aliases_by_attribute_name.delete('id')
+      end
+
+      context 'when job attributes have not been populated' do
+        let(:job) { Arj::Test::Job.new }
+
+        it 'populates provider_job_id' do
+          expect { subject }.to change { job.provider_job_id }.from(nil).to(record_id)
+        end
+
+        context 'when provider_job_id nil' do
+          before { job.provider_job_id = nil }
+
+          it 'does not raise' do
+            expect { subject }.not_to raise_error
+          end
+        end
+      end
+
+      context 'when provider_job_id and record ID do not match' do
+        before { job.provider_job_id = -1 }
+
+        it 'raises' do
+          expect { subject }.to raise_error(StandardError, /unexpected id for/)
+        end
+      end
+
+      context 'when provider_job_id nil' do
+        before { job.provider_job_id = nil }
+
+        it 'raises' do
+          expect { subject }.to raise_error(StandardError, /unexpected id for/)
+        end
+      end
+    end
+
+    context 'when record_class does not have an ID' do
+      context 'when job has provider_job_id' do
+        before do
+          job.provider_job_id = -1
+        end
+
+        it 'raises' do
+          expect { subject }.to raise_error(StandardError, /unexpected id for/)
+        end
+      end
+    end
+
+    context 'when job_ids do not match' do
+      before { job.job_id = 'other job id' }
+
+      it 'raises' do
+        expect { subject }.to raise_error(ArgumentError, /unexpected job_id for/)
+      end
     end
 
     context 'when record is not of type Arj.record_class' do
@@ -291,14 +321,6 @@ describe Arj::Persistence do
       end
     end
 
-    context 'when provider_job_id and record ID do not match' do
-      before { job.provider_job_id = -1 }
-
-      it 'raises' do
-        expect { subject }.to raise_error(StandardError, /unexpected id for/)
-      end
-    end
-
     context 'when successfully_enqueued is false' do
       before { job.successfully_enqueued = false }
 
@@ -311,9 +333,7 @@ describe Arj::Persistence do
       let(:job) { Arj::Test::Job.new }
 
       it 'populates job fields' do
-        expect(job.provider_job_id).to be_nil
-        subject
-        expect(job.provider_job_id).to eq(record.id)
+        expect { subject }.to change { job.job_id }.to(record.job_id)
       end
 
       it 'populates arguments' do
@@ -336,9 +356,12 @@ describe Arj::Persistence do
     context 'when the job has not been enqueued before' do
       let!(:job) { Arj::Test::Job.new('some arg') }
 
+      it 'finds enqueued_at is nil' do
+        expect(job.enqueued_at).to be_nil
+      end
+
       it 'persists the record' do
         expect { subject }.to change(Job, :count).from(0).to(1)
-        expect(Job.last.job_id).not_to be_nil
         expect(Job.last.job_id).to eq(job.job_id)
       end
 

@@ -23,23 +23,42 @@ ActiveRecord::Migration.verbose = false unless level <= 1
 class Job < ActiveRecord::Base
 end
 
+def add_default_jobs_columns(table)
+  table.string   :job_class,            null: false
+  table.string   :queue_name
+  table.integer  :priority
+  table.text     :arguments,            null: false
+  table.integer  :executions,           null: false
+  table.text     :exception_executions, null: false
+  table.string   :locale,               null: false
+  table.string   :timezone,             null: false
+  table.datetime :enqueued_at,          null: false
+  table.datetime :scheduled_at
+end
+
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
-    create_table :jobs do |table|
-      table.string   :job_class,            null: false
-      table.string   :job_id,               null: false
-      table.string   :queue_name
-      table.integer  :priority
-      table.text     :arguments,            null: false
-      table.integer  :executions,           null: false
-      table.text     :exception_executions, null: false
-      table.string   :locale,               null: false
-      table.string   :timezone,             null: false
-      table.datetime :enqueued_at,          null: false
-      table.datetime :scheduled_at
-
-      table.timestamps
+    create_table :jobs, id: :string, primary_key: :job_id do |table|
+      add_default_jobs_columns(table)
     end
+  end
+
+  def self.down
+    drop_table :jobs
+  end
+end
+
+class CreateJobsWithId < ActiveRecord::Migration[7.1]
+  def self.up
+    create_table :jobs do |table|
+      table.string :job_id, null: false
+      add_default_jobs_columns(table)
+    end
+    add_index :jobs, :job_id, unique: true
+  end
+
+  def self.down
+    drop_table :jobs
   end
 end
 
