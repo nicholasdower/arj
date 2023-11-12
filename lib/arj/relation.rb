@@ -109,19 +109,16 @@ module Arj
     # the output produced when calling +pretty_inspect+ on ActiveRecord::Relation.
     #
     # Instead of the default +pretty_inspect+ output:
-    #   [1] pry(main)> Arj.all
-    #   => #<Arj::Relation:0x000000010bc44508
-    #   @ar_relation=
-    #    [#<Job:0x000000010b54b2d8
-    #     id: 1,
-    #     ...
+    #    :002 > Arj.all
+    #    =>
+    #   #<Arj::Relation:0x000000010a05a6f8
+    #    @ar_relation=
+    #     [#<Arj::Test::Job:0x0000000105f74c60
     #
     # Produces:
-    #   [1] pry(main)> Arj.all
-    #   => [#<Arj::Test::Job:0x0000000110ab0840
-    #     @_scheduled_at_time=nil,
-    #     @arguments=[],
-    #     ...
+    #    :002 > Arj.all
+    #    =>
+    #   [#<Arj::Test::Job:0x0000000105f74c60
     #
     # @param pp [PP]
     # @return [NilClass]

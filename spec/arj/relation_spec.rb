@@ -97,13 +97,13 @@ describe Arj::Relation do
     end
   end
 
-  context '#pretty_inspect' do
-    subject { relation.pretty_inspect }
+  context '#pretty_print' do
+    subject { PP.pp(Arj.last, StringIO.new).string }
 
     before { Arj::Test::Job.perform_later(1) }
 
     it 'returns Arj jobs representations' do
-      expect(subject).to start_with('[#<Arj::Test::Job:')
+      expect(subject).to start_with('#<Arj::Test::Job:')
     end
   end
 

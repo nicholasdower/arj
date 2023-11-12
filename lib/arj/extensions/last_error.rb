@@ -21,11 +21,46 @@ module Arj
     #   job.perform_now
     #   puts job.last_error
     module LastError
+      # Wraps an error String to prevent the entire message and backtrace from being displayed when pretty printing.
+      class Wrapper
+        def initialize(clazz, message, backtrace)
+          @clazz = clazz
+          @message = message
+          @backtrace = backtrace
+        end
+
+        # Returns a {Wrapper} for the specified error String.
+        #
+        # @return [Wrapper]
+        def self.from(str)
+          lines = str.split("\n")
+          match = lines.first.match(/^(^[^ ]+): (.*)/)
+          raise "invalid error: #{lines.first}" unless match
+
+          Wrapper.new(match[1], match[2], lines[1..])
+        end
+
+        # Returns the full error with backtrace.
+        #
+        # @return [String]
+        def to_s
+          (["#{@clazz}: #{@message}"] + @backtrace).join("\n")
+        end
+
+        # Implemented to truncate errors when pretty printing.
+        def pretty_print(pp)
+          message = @message.truncate(100, omission: '…')
+          message = "#{message} (backtrace hidden)" if @backtrace.any?
+          pp.pp("#{@clazz}: #{message}")
+        end
+      end
+      private_constant :Wrapper
+
       # Returns a String representing the last error encountered during execution, if any.
       #
       # @return [String]
       def last_error
-        @last_error
+        @last_error&.to_s
       end
 
       # Sets the last error.
@@ -42,7 +77,9 @@ module Arj
           error = backtrace ? "#{error.class}: #{error.message}\n#{backtrace}" : "#{error.class}: #{error.message}"
         end
 
-        @last_error = error&.truncate(10_535, omission: '… (truncated)')
+        error = error&.truncate(10_535, omission: '… (truncated)')
+
+        @last_error = error ? Wrapper.from(error) : nil
       end
 
       # Overridden to add support for setting the +last_error+ attribute.
@@ -66,7 +103,7 @@ module Arj
       #
       # @param job_data [Hash]
       def deserialize(job_data)
-        super.tap { @last_error = job_data['last_error'] }
+        super.tap { self.last_error = job_data['last_error'] }
       end
     end
   end

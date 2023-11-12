@@ -5,10 +5,16 @@ Add failed extension. Add a failed query method.
 Add perform_on_commit extension
 Add features section to README.md.
 Add motivation section to README.md.
+ - last_error fills screen
+ - locking not required
+ - ActiveRecord loaded too early
+ - Terminology does not match ActiveJob
+ - Retrieving and interacting with jobs difficult
+ - Wrapper classes, subclasses
+ - Updating jobs difficult
 Add ability to run tests on several Ruby/ActiveJob versions.
 Use pre version when in development.
 Add indexes
-Store last error in a StandardError object
 Allow some tests to run against other backends. Use tags.
 Allow query interface to be used with other backends.
 Rewrite release script in Ruby

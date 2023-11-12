@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
+require 'English'
 require_relative '../../spec_helper'
 
 describe Arj::Extensions::LastError do
   before do
     TestDb.migrate(AddLastErrorToJobs, :up)
-    stub_const('Arj::JobWithLastError', Class.new(ActiveJob::Base))
-    Arj::JobWithLastError.class_eval do
+    stub_const('Arj::LastErrorJob', Class.new(ActiveJob::Base))
+    Arj::LastErrorJob.class_eval do
       include Arj::Extensions::LastError
       retry_on Exception
 
@@ -22,7 +23,7 @@ describe Arj::Extensions::LastError do
     context 'when a job fails' do
       subject { job.perform_now }
 
-      let(:job) { Arj::JobWithLastError.perform_later }
+      let(:job) { Arj::LastErrorJob.perform_later }
 
       it 'persists the last error' do
         subject
@@ -33,7 +34,7 @@ describe Arj::Extensions::LastError do
     context 'when error is updated' do
       subject { Arj.update!(job, last_error: error) }
 
-      let!(:job) { Arj::JobWithLastError.perform_later }
+      let!(:job) { Arj::LastErrorJob.perform_later }
       let(:error) do
         raise 'oh, hi'
       rescue RuntimeError => e
@@ -81,7 +82,7 @@ describe Arj::Extensions::LastError do
     subject { Arj.last }
 
     context 'when a job class with last_error is retrieved' do
-      before { Arj::JobWithLastError.perform_now }
+      before { Arj::LastErrorJob.perform_now }
 
       it 'sets the last_error from the database' do
         expect(subject.last_error).to match(/RuntimeError: oh, hi/)
@@ -93,6 +94,62 @@ describe Arj::Extensions::LastError do
 
       it 'successfully reads job data from the database' do
         expect(subject.queue_name).to eq('some queue')
+      end
+    end
+  end
+
+  context '#pretty_print' do
+    subject { PP.pp(Arj.last, StringIO.new).string }
+
+    before { Arj::LastErrorJob.perform_now }
+
+    context 'when error has a backtrace' do
+      context 'when message is not too long' do
+        it 'returns the full message with hidden backtrace' do
+          expect(subject).to match(/@last_error="RuntimeError: oh, hi \(backtrace hidden\)",/)
+        end
+      end
+
+      context 'when message is too long' do
+        before do
+          job = Arj.last
+          job.last_error = raise 100.times.map { |i| i }.join(',').to_s rescue $ERROR_INFO
+          job.enqueue
+        end
+
+        it 'returns a truncated message with a truncated message' do
+          expected = '"RuntimeError: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,' \
+                     '23,24,25,26,27,28,29,30,31,32,33,34,35,3… (backtrace hidden)",'
+          expect(subject).to include(expected)
+        end
+      end
+    end
+
+    context 'when error does not have a backtrace' do
+      context 'when message is not too long' do
+        before do
+          job = Arj.last
+          job.last_error = RuntimeError.new('oh, hi')
+          job.enqueue
+        end
+
+        it 'returns the full message without hidden backtrace' do
+          expect(subject).to match(/@last_error="RuntimeError: oh, hi",/)
+        end
+      end
+
+      context 'when message is too long' do
+        before do
+          job = Arj.last
+          job.last_error = RuntimeError.new(100.times.map { |i| i }.join(','))
+          job.enqueue
+        end
+
+        it 'returns a truncated message with a truncated message' do
+          expected = '"RuntimeError: 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,' \
+                     '23,24,25,26,27,28,29,30,31,32,33,34,35,3…",'
+          expect(subject).to include(expected)
+        end
       end
     end
   end
