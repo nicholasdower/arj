@@ -39,6 +39,14 @@ install:
 console:  .install
 	@./script/console
 
+.PHONY: console-irb
+console-irb:  .install
+	@./script/console-irb
+
+.PHONY: console-pry
+console-pry:  .install
+	@./script/console-pry
+
 .PHONY: rspec
 rspec: .install
 	@rspec

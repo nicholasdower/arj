@@ -1,81 +1,10 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'logger'
-require 'pry'
+require 'fileutils'
 
-ENV['LEVEL'] ||= Logger::INFO.to_s
-
-require_relative 'init'
-
-# Reload all source files.
-class ReloadCommand < Pry::ClassCommand
-  match 'reload'
-  group 'Arj'
-  description 'Reload all source files.'
-
-  banner <<-BANNER
-    Reload all source files.
-  BANNER
-
-  command_options(keep_retval: false)
-
-  def process
-    Dir.glob('lib/**/*.rb').each { |f| load "./#{f}" }
-  end
-end
-Pry::Commands.add_command(ReloadCommand)
-
-# Set the ActiveRecord and ActiveJob log level.
-class LevelCommand < Pry::ClassCommand
-  match 'level'
-  group 'Arj'
-  description 'Set the ActiveRecord and ActiveJob log level.'
-
-  banner <<-BANNER
-    Set the ActiveRecord and ActiveJob log level.
-  BANNER
-
-  def process(level)
-    level = Integer(level) if %w[0 1 2 3 4 5].include?(level)
-
-    ActiveRecord::Base.logger.level = level if level
-    ActiveJob::Base.logger.level = level if level
-    ActiveJob::Base.logger.level
-  end
-end
-Pry::Commands.add_command(LevelCommand)
-
-# Reset the REPL.
-class Pry
-  class Command
-    class Reset < Pry::ClassCommand
-      def process
-        output.puts 'Pry reset.'
-        exec './script/console'
-      end
-    end
-  end
-end
-
-Pry::Commands.add_command(LevelCommand)
-Pry.config.pager = false
-
-puts <<~'BANNER'
-                      _
-       /\            |_|
-      /  \     _ __   _
-     / /\ \   |  __| | |
-    / ____ \  | |    | |
-   /_/    \_\ |_|   _/ |
-                   |__/
-  Arj. An ActiveJob queuing backend which uses ActiveRecord.
-
-BANNER
-
-begin
-  TestDb.reset
-  Pry.start
-ensure
-  TestDb.destroy
+if File.exist?('.irb')
+  load 'script/console-irb'
+else
+  load 'script/console-pry'
 end

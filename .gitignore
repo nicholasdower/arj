@@ -2,6 +2,9 @@
 /*.gem
 /.idea
 /.install
+/.irb
+/.irb_history
+/.pryrc
 /.test.db*
 /.yardoc
 /coverage
