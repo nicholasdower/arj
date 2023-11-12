@@ -41,6 +41,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
     create_table :jobs, id: :string, primary_key: :job_id do |table|
       add_default_jobs_columns(table)
     end
+    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
   end
 
   def self.down
@@ -55,6 +56,7 @@ class CreateJobsWithId < ActiveRecord::Migration[7.1]
       add_default_jobs_columns(table)
     end
     add_index :jobs, :job_id, unique: true
+    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
   end
 
   def self.down

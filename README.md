@@ -51,6 +51,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.datetime :enqueued_at,          null: false
       table.datetime :scheduled_at
     end
+    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
   end
 
   def self.down
@@ -320,6 +321,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.datetime :scheduled_at
     end
     add_index :jobs, :job_id, unique: true
+    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
   end
 
   def self.down
