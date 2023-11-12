@@ -78,8 +78,8 @@ describe 'failing' do
         expect { subject rescue nil }.not_to change { original_job.scheduled_at }.from(nil)
       end
 
-      it "does not set the original job's enqueued_at" do
-        expect { subject rescue nil }.not_to change { original_job.enqueued_at.to_s }.from(Time.zone.now.to_s)
+      it "clears the original job's enqueued_at" do
+        expect { subject rescue nil }.to change { original_job.enqueued_at&.to_s }.from(Time.now.utc.to_s).to(nil)
       end
 
       it "does not set the original job's exception_executions" do
@@ -109,13 +109,13 @@ describe 'failing' do
       it "sets the original job's enqueued_at" do
         Timecop.travel(1.minute)
         expect { subject rescue nil }.to change { original_job.enqueued_at&.to_s }
-          .from(1.minute.ago.to_s).to(Time.zone.now.to_s)
+          .from(1.minute.ago.to_s).to(Time.now.utc.to_s)
       end
 
       it "sets the persisted job's enqueued_at" do
         Timecop.travel(1.minute)
         expect { subject rescue nil }.to change { Arj.last.enqueued_at&.to_s }
-          .from(1.minute.ago.to_s).to(Time.zone.now.to_s)
+          .from(1.minute.ago.to_s).to(Time.now.utc.to_s)
       end
 
       it "sets the original job's scheduled_at" do

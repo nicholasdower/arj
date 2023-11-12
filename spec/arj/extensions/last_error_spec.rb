@@ -8,6 +8,7 @@ describe Arj::Extensions::LastError do
     TestDb.migrate(AddLastErrorToJobs, :up)
     stub_const('Arj::LastErrorJob', Class.new(ActiveJob::Base))
     Arj::LastErrorJob.class_eval do
+      include Arj::Base
       include Arj::Extensions::LastError
       retry_on Exception
 

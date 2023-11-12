@@ -8,6 +8,7 @@ describe Arj::Test do
 
     before do
       stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
+      Arj::SampleJob.include(Arj::Base)
       Arj::Test::Job.perform_later
       Arj::SampleJob.perform_later
     end

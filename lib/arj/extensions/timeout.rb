@@ -52,7 +52,7 @@ module Arj
         # @param duration [Duration, NilClass]
         # @return [Duration]
         def timeout_after(duration)
-          @__arj_timeout = duration
+          @timeout = duration
         end
       end
 
@@ -63,7 +63,7 @@ module Arj
       # @return [Class]
       def self.included(clazz)
         clazz.around_perform do |job, block|
-          timeout = job.class.instance_variable_get(:@__arj_timeout)
+          timeout = job.class.instance_variable_get(:@timeout)
           timeout ||= Arj::Extensions::Timeout.default_timeout
           ::Timeout.timeout(timeout.in_seconds, Arj::Extensions::Timeout::Error, 'execution expired') { block.call }
         end

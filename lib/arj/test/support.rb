@@ -9,11 +9,12 @@ module Arj
   # Arj testing module. Provides job classes for use in tests.
   #
   # See:
-  # - {Job}              - A test job.
-  # - {Error}            - A test error which, when raised from a test job, will cause the job to be retried.
-  # - {JobWithShard}     - A test job with an added +shard+ column.
-  # - {JobWithLastError} - A test job with an added +last_error+ column.
-  # - {JobWithTimeout}   - A test job with a timeout.
+  # - {Job}                  - A test job.
+  # - {Error}                - A test error which, when raised from a test job, will cause the job to be retried.
+  # - {JobWithShard}         - A test job with an added +shard+ column.
+  # - {JobWithLastError}     - A test job with an added +last_error+ column.
+  # - {JobWithTimeout}       - A test job with a timeout.
+  # - {JobWithKeepDiscarded} - A test job which is retained when discarded.
   module Test
     include Query
 
@@ -71,6 +72,7 @@ module Arj
     class Job < ActiveJob::Base
       retry_on Arj::Test::Error, wait: 1.minute, attempts: 2
 
+      include Arj::Base
       include Query
       include Persistence
 
@@ -174,6 +176,13 @@ module Arj
       retry_on Arj::Extensions::Timeout::Error, wait: 1.minute, attempts: 2
 
       timeout_after 1.second
+    end
+
+    # A test {Job} which is retained when discarded. See: {Arj::Extensions::KeepDiscarded}.
+    class JobWithKeepDiscarded < Arj::Test::Job
+      include Arj::Extensions::KeepDiscarded
+
+      retry_on Exception, attempts: 2
     end
   end
 end

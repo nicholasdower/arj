@@ -47,10 +47,10 @@ module Arj
       # @param timestamp [Numeric, NilClass] optional number of seconds since Unix epoch at which to execute the job
       # @return [ActiveJob::Base] the enqueued job
       def enqueue(job, timestamp = nil)
-        job.scheduled_at = timestamp ? Time.zone.at(timestamp) : nil
+        job.scheduled_at = timestamp ? Time.at(timestamp).utc : nil
 
-        if job.enqueued_at
-          record = Arj.record_class.find(job.job_id)
+        job.enqueued_at = Time.now.utc.to_time
+        if (record = Arj.record_class.find_by(job_id: job.job_id))
           record.update!(Persistence.record_attributes(job))
         else
           attributes = Persistence.record_attributes(job)
@@ -68,45 +68,22 @@ module Arj
         raise "expected #{Arj.record_class}, found #{record.class}" unless record.is_a?(Arj.record_class)
         raise "expected #{record.job_class}, found #{job.class}" if job && job.class.name != record.job_class
 
-        if job&.enqueued_at && job.job_id != record.job_id
-          raise ArgumentError, "unexpected job_id for #{job.class}: #{record.job_id} vs. #{job.job_id}"
-        end
-
         record_id = record.attributes['id'] # Nil if the database does not have an ID column
 
         # If the job has been enqueued or has a provider id, the provider id should equal the record id
-        if (job&.provider_job_id || job&.enqueued_at) && job.provider_job_id != record_id
-          raise ArgumentError,
-                "unexpected id for #{job.class}: #{record_id || 'nil'} vs. #{job.provider_job_id || 'nil'}"
+        if job&.provider_job_id && job.provider_job_id != record_id
+          raise ArgumentError, "unexpected id for #{job.class}: #{record_id || 'nil'} vs. #{job.provider_job_id}"
         end
 
         job ||= Object.const_get(record.job_class).new
         raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
-
-        job.job_id = record.job_id
-        job.successfully_enqueued = true
 
         job_data = job_data(record)
 
         # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
         job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
         job.deserialize(job_data)
-        unless job.singleton_class.instance_variable_get(:@__arj)
-          job.singleton_class.before_perform do |job|
-            # Setting successfully_enqueued to false in order to detect when a job is re-enqueued during perform.
-            job.successfully_enqueued = false
-          end
-
-          job.singleton_class.after_perform do |job|
-            Arj.record_class.find(job.job_id).destroy! unless job.successfully_enqueued?
-          end
-
-          job.singleton_class.after_discard do |job, _exception|
-            Arj.record_class.find(job.job_id).destroy!
-          end
-
-          job.singleton_class.instance_variable_set(:@__arj, true)
-        end
+        job.successfully_enqueued = !job.enqueued_at.nil?
 
         job
       end
@@ -121,7 +98,7 @@ module Arj
         job_data['arguments'] = JSON.parse(job_data['arguments'])
         job_data['provider_job_id'] = job_data['id']
         job_data['exception_executions'] = JSON.parse(job_data['exception_executions'])
-        job_data['enqueued_at'] = job_data['enqueued_at'].iso8601
+        job_data['enqueued_at'] = job_data['enqueued_at'].iso8601 if job_data['enqueued_at']
         job_data['scheduled_at'] = job_data['scheduled_at']&.iso8601 if job_data['scheduled_at']
         job_data
       end
@@ -136,6 +113,13 @@ module Arj
         serialized.delete('provider_job_id')
         serialized['arguments'] = serialized['arguments'].to_json
         serialized['exception_executions'] = serialized['exception_executions'].to_json
+
+        # ActiveJob::Base#serialize always returns Time.now.utc.iso8601(9) for enqueued_at.
+        serialized['enqueued_at'] = job.enqueued_at&.utc
+
+        # ActiveJob::Base#serialize always returns I18n.locale.to_s for locale.
+        serialized['locale'] = job.locale
+
         serialized.symbolize_keys
       end
     end

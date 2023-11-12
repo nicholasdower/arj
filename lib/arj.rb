@@ -107,6 +107,8 @@ module Arj
       record = Arj.record_class.find(job.job_id)
       record.destroy!
       job.successfully_enqueued = false
+      job.scheduled_at = nil
+      job.enqueued_at = nil
       job
     end
 

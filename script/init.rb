@@ -30,8 +30,8 @@ def add_default_jobs_columns(table)
   table.text     :arguments,            null: false
   table.integer  :executions,           null: false
   table.text     :exception_executions, null: false
-  table.string   :locale,               null: false
-  table.string   :timezone,             null: false
+  table.string   :locale
+  table.string   :timezone
   table.datetime :enqueued_at,          null: false
   table.datetime :scheduled_at
 end
@@ -81,6 +81,18 @@ class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
 
   def self.down
     remove_column :jobs, :last_error
+  end
+end
+
+class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    add_column :jobs, :discarded_at, :datetime
+    change_column :jobs, :enqueued_at, :datetime, null: true
+  end
+
+  def self.down
+    remove_column :jobs, :discarded_at
+    change_column :jobs, :enqueued_at, :datetime, null: false
   end
 end
 

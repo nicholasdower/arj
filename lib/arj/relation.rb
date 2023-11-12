@@ -57,6 +57,19 @@ module Arj
       where('executions > ?', 0)
     end
 
+    # Returns a {Relation} scope for jobs where +discarded_at+ is not +null+.
+    #
+    # See: [Arj::Extensions::KeepDiscarded]
+    #
+    # @return [Arj::Relation]
+    def discarded
+      unless Arj.record_class.attribute_names.include?('discarded_at')
+        raise "#{Arj.record_class.name} class missing discarded_at attribute"
+      end
+
+      where('discarded_at is not null')
+    end
+
     # Returns a {Relation} scope for jobs in the specified queue(s).
     #
     # @param queues [Array<String]
@@ -69,7 +82,10 @@ module Arj
     #
     # @return [Arj::Relation]
     def executable
-      where('scheduled_at is null or scheduled_at <= ?', Time.zone.now)
+      relation = where('scheduled_at is null or scheduled_at <= ?', Time.now.utc)
+      relation = relation.where('discarded_at is null') if Arj.record_class.attribute_names.include?('discarded_at')
+
+      relation
     end
 
     # Returns a {Relation} scope for {executable} jobs in order.

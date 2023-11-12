@@ -1,7 +1,6 @@
 Handle errors enqueuing, prevent busy loop
 Figure out how EnqueueError is used.
 Fail build on low test coverage
-Add failed extension. Add a failed query method.
 Add perform_on_commit extension
 Add features section to README.md.
 Add motivation section to README.md.
@@ -17,3 +16,8 @@ Use pre version when in development.
 Allow some tests to run against other backends. Use tags.
 Allow query interface to be used with other backends.
 Rewrite release script in Ruby
+Should I serialize `arguments:` in Relation?
+Clarify separatation between update and update_job
+Clear scheduled_at and enqueued_at on discard.
+Better name for todo.
+Fix LEVEL when running rspec from console

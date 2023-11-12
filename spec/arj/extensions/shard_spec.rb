@@ -6,6 +6,7 @@ describe Arj::Extensions::Shard do
   before do
     TestDb.migrate(AddShardToJobs, :up)
     stub_const('Arj::JobWithShard', Class.new(ActiveJob::Base))
+    Arj::JobWithShard.include(Arj::Base)
     Arj::JobWithShard.include(Arj::Extensions::Shard)
   end
 

@@ -34,6 +34,10 @@ module Arj
       #
       # @return [Hash]
       def serialize
+        unless Arj.record_class.attribute_names.include?('shard')
+          raise "#{Arj.record_class.name} class missing shard attribute"
+        end
+
         super.merge('shard' => @shard)
       end
 
@@ -41,6 +45,8 @@ module Arj
       #
       # @param job_data [Hash]
       def deserialize(job_data)
+        raise "#{Arj.record_class.name} data missing shard attribute" unless job_data.key?('shard')
+
         super.tap { @shard = job_data['shard'] }
       end
     end

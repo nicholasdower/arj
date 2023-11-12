@@ -46,7 +46,7 @@ puts <<~'BANNER'
                    |__/
   Arj. An ActiveJob queuing backend which uses ActiveRecord.
 
-  Loading IRB console. Type irb to use Pry.
+  Loading IRB console. Type pry to use Pry.
 
 BANNER
 

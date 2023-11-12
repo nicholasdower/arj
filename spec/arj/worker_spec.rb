@@ -126,7 +126,7 @@ describe Arj::Worker do
 
     context 'when existing jobs become available' do
       before do
-        Arj::Test::Job.set(wait: 5.seconds).perform_later(Time.zone.now)
+        Arj::Test::Job.set(wait: 5.seconds).perform_later(Time.now.utc)
 
         iterations = 0
         allow(worker).to receive(:sleep) do |duration|

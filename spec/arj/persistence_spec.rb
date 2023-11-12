@@ -255,14 +255,6 @@ describe Arj::Persistence do
           expect { subject }.to raise_error(StandardError, /unexpected id for/)
         end
       end
-
-      context 'when provider_job_id nil' do
-        before { job.provider_job_id = nil }
-
-        it 'raises' do
-          expect { subject }.to raise_error(StandardError, /unexpected id for/)
-        end
-      end
     end
 
     context 'when record_class does not have an ID' do
@@ -274,14 +266,6 @@ describe Arj::Persistence do
         it 'raises' do
           expect { subject }.to raise_error(StandardError, /unexpected id for/)
         end
-      end
-    end
-
-    context 'when job_ids do not match' do
-      before { job.job_id = 'other job id' }
-
-      it 'raises' do
-        expect { subject }.to raise_error(ArgumentError, /unexpected job_id for/)
       end
     end
 
@@ -315,10 +299,6 @@ describe Arj::Persistence do
       it 'returns a the job' do
         expect(subject.job_id).to eq(record.job_id)
       end
-
-      it 'returns an enhanced job' do
-        expect(subject.singleton_class.instance_variable_get(:@__arj)).to eq(true)
-      end
     end
 
     context 'when successfully_enqueued is false' do
@@ -340,10 +320,6 @@ describe Arj::Persistence do
         expect(job.arguments).to eq([])
         subject
         expect(job.arguments).to eq(['some arg'])
-      end
-
-      it 'enhances the job with Arj features' do
-        expect { subject }.to change { job.singleton_class.instance_variable_get(:@__arj) }.from(nil).to(true)
       end
     end
   end
@@ -368,10 +344,6 @@ describe Arj::Persistence do
       it 'updates successfully_enqueued' do
         expect { subject }.to change { job.successfully_enqueued? }.from(nil).to(true)
       end
-
-      it 'enhances the job with Arj features' do
-        expect { subject }.to change { job.singleton_class.instance_variable_get(:@__arj) }.from(nil).to(true)
-      end
     end
 
     context 'when the job has been enqueued before' do
@@ -379,7 +351,7 @@ describe Arj::Persistence do
 
       it 'updates enqueued_at' do
         Timecop.travel(1.second)
-        expect { subject }.to change { Job.sole.enqueued_at.to_s }.from(1.second.ago.to_s).to(Time.zone.now.to_s)
+        expect { subject }.to change { Job.sole.enqueued_at.to_s }.from(1.second.ago.to_s).to(Time.now.utc.to_s)
       end
 
       context 'when the job has been updated' do

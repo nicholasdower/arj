@@ -119,9 +119,8 @@ describe Arj::Query do
 
     before do
       stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
-      Arj::SampleJob.class_eval do
-        include Arj::Query
-      end
+      Arj::SampleJob.include(Arj::Base)
+      Arj::SampleJob.include(Arj::Query)
       Arj::Test::Job.perform_later('some arg')
       Arj::SampleJob.perform_later('some arg')
     end

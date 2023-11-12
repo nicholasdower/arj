@@ -46,7 +46,7 @@ shared_examples 'job fields' do |expected_clazz|
       [[], { foo: 1, bar: 2 }],
       [[1], { foo: 1, bar: 2 }],
       [[1, 2], { foo: 1, bar: 2 }],
-      [[Time.zone.now], {}]
+      [[Time.now.utc], {}]
     ].each do |(a, k)|
       let(:args) { a }
       let(:kwargs) { k }
@@ -63,7 +63,7 @@ shared_examples 'job fields' do |expected_clazz|
   end
 
   it 'has enqueued_at' do
-    expect(subject.enqueued_at.to_s).to eq(Time.zone.now.to_s)
+    expect(subject.enqueued_at.to_s).to eq(Time.now.utc.to_s)
   end
 
   context 'when no delay specified' do

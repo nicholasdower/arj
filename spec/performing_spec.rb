@@ -84,6 +84,8 @@ describe 'performing' do
       before do
         stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
         Arj::SampleJob.class_eval do
+          include Arj::Base
+
           def perform
             enqueue
           end
@@ -145,8 +147,8 @@ describe 'performing' do
       context 'when the database record no longer exists' do
         before { Job.destroy_all }
 
-        it 'raises' do
-          expect { subject }.to raise_error(ActiveRecord::RecordNotFound, /Couldn't find Job with 'job_id'/)
+        it 'does not raise' do
+          expect { subject }.not_to raise_error
         end
       end
     end

@@ -17,8 +17,7 @@ module Arj
     #     retry_on Exception
     #   end
     #
-    #   job = SampleJob.perform_later
-    #   job.perform_now
+    #   job = SampleJob.perform_now
     #   puts job.last_error
     module LastError
       # Wraps an error String to prevent the entire message and backtrace from being displayed when pretty printing.
@@ -96,6 +95,10 @@ module Arj
       #
       # @return [Hash]
       def serialize
+        unless Arj.record_class.attribute_names.include?('last_error')
+          raise "#{Arj.record_class.name} class missing shard attribute"
+        end
+
         super.merge('last_error' => @last_error)
       end
 
@@ -103,6 +106,8 @@ module Arj
       #
       # @param job_data [Hash]
       def deserialize(job_data)
+        raise "#{Arj.record_class.name} data missing last_error attribute" unless job_data.key?('last_error')
+
         super.tap { self.last_error = job_data['last_error'] }
       end
     end

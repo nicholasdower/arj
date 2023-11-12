@@ -22,6 +22,7 @@ For more information on ActiveJob, see:
   * [LastError](#lasterror)
   * [Shard](#shard)
   * [Timeout](#timeout)
+  * [KeepDiscarded](#keepdiscarded)
   * [Database ID](#database-id)
 - [Testing](#testing)
 
@@ -78,6 +79,14 @@ If not using Rails:
 ActiveJob::Base.queue_adapter = :arj
 ```
 
+Include the `Arj::Base` module:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Base
+end
+```
+
 ## Querying
 
 The `Arj` module exposes query methods which can be used to find jobs:
@@ -103,6 +112,7 @@ Optionally, query methods can also be added to job classes:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Query
 end
 
@@ -112,8 +122,12 @@ SampleJob.all # All SampleJobs
 `:all` can be overridden to provide custom querying:
 
 ```ruby
-class SampleJobOne < ActiveJob::Base; end
-class SampleJobTwo < ActiveJob::Base; end
+class SampleJobOne < ActiveJob::Base
+  include Arj::Base
+end
+class SampleJobTwo < ActiveJob::Base
+  include Arj::Base
+end
 
 class SampleJobs
   include Arj::Query
@@ -143,6 +157,7 @@ Optionally, these methods can be added to job classes:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Persistence
 end
 ```
@@ -196,6 +211,7 @@ Next, include the `Shard` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Extensions::Shard
 end
 ```
@@ -226,6 +242,7 @@ Next, include the `LastError` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Extensions::LastError
 end
 ```
@@ -234,6 +251,7 @@ end
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Extensions::LastError
 
   retry_on Exception
@@ -258,6 +276,7 @@ First, include the `Timeout` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Extensions::Timeout
 
   def perform
@@ -276,6 +295,7 @@ Optionally, override the default timeout for a job class:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Extensions::Timeout
 
   timeout_after 5.seconds
@@ -286,6 +306,7 @@ end
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj::Base
   include Arj::Extensions::Timeout
 
   timeout_after 1.second
@@ -298,6 +319,8 @@ class SampleJob < ActiveJob::Base
   job.perform_now
 end
 ```
+
+### KeepDiscarded
 
 ### Database ID
 
@@ -341,6 +364,7 @@ Arj::Test::Job
 Arj::Test::JobWithShard
 Arj::Test::JobWithLastError
 Arj::Test::JobWithTimeout
+Arj::Test::JobWithKeepDiscarded
 ```
 
 To test job failures:
@@ -362,6 +386,15 @@ To test timeouts:
 ```ruby
 job = Arj::Test::JobWithTimeout.perform_later(-> { sleep 2 })
 job.perform_now
+```
+
+To test retention on discard:
+
+```ruby
+job = Arj::Test::JobWithKeepDiscarded.perform_later(StandardError, 'oh, hi')
+2.times { job.perform_now }
+job.discarded?
+job.discarded_at
 ```
 
 ## ActiveJob Cheatsheet
@@ -416,9 +449,10 @@ SampleJob                                      # All enqueued with options
 job = SampleJob.new
 SampleJob.new.perform_now
 SampleJob.new.execute
+ActiveJob::Base.exeucute(job.serialize)
 
 # Performed after enqueueing
 job = SampleJob.perform_later
 job.perform_now
-job.exeucute
+ActiveJob::Base.exeucute(job.serialize)
 ```
