@@ -388,7 +388,7 @@ SampleJob.new(args).enqueue(options)           # Enqueued with options
 SampleJob.perform_later(args)                  # Enqueued without options
 SampleJob.options(options).perform_later(args) # Enqueued with options
 
-SampleJob.perform_now(args)                    # Enqueued on failure, if retries configured
+SampleJob.perform_now(args)                    # Enqueued on failure if retries configured
 
 ActiveJob.perform_all_later(                   # All enqueued without options
   SampleJob.new, SampleJob.new
@@ -412,5 +412,13 @@ SampleJob                                      # All enqueued with options
 ### Executing Jobs
 
 ```ruby
-SampleJob.new.perform_now # Performed 
+# Performed without enqueueing, enqueued on failure if retries configured
+job = SampleJob.new
+SampleJob.new.perform_now
+SampleJob.new.execute
+
+# Performed after enqueueing
+job = SampleJob.perform_later
+job.perform_now
+job.exeucute
 ```

@@ -17,5 +17,4 @@ Use pre version when in development.
 Allow some tests to run against other backends. Use tags.
 Allow query interface to be used with other backends.
 Rewrite release script in Ruby
-Document execute method in cheatsheet.
 Use a class attribute for the worker logger.
