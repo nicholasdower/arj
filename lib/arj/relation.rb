@@ -59,7 +59,7 @@ module Arj
 
     # Returns a {Relation} scope for jobs where +discarded_at+ is not +null+.
     #
-    # See: [Arj::Extensions::KeepDiscarded]
+    # See: [Arj::Extensions::RetainDiscarded]
     #
     # @return [Arj::Relation]
     def discarded

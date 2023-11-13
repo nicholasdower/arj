@@ -22,7 +22,7 @@ For more information on ActiveJob, see:
   * [LastError](#lasterror)
   * [Shard](#shard)
   * [Timeout](#timeout)
-  * [KeepDiscarded](#keepdiscarded)
+  * [RetainDiscarded](#retaindiscarded)
   * [Database ID](#database-id)
 - [Testing](#testing)
 
@@ -320,7 +320,7 @@ class SampleJob < ActiveJob::Base
 end
 ```
 
-### KeepDiscarded
+### RetainDiscarded
 
 Provides the ability to retain discarded jobs.
 
@@ -342,12 +342,12 @@ class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-Next, include the `KeepDiscarded` extension:
+Next, include the `RetainDiscarded` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
   include Arj
-  include Arj::Extensions::KeepDiscarded
+  include Arj::Extensions::RetainDiscarded
 end
 ```
 
@@ -356,7 +356,7 @@ end
 ```ruby
 class SampleJob < ActiveJob::Base
   include Arj
-  include Arj::Extensions::KeepDiscarded
+  include Arj::Extensions::RetainDiscarded
 
   def perform
     raise 'oh, hi'
@@ -413,7 +413,7 @@ Arj::Test::Job
 Arj::Test::JobWithShard
 Arj::Test::JobWithLastError
 Arj::Test::JobWithTimeout
-Arj::Test::JobWithKeepDiscarded
+Arj::Test::JobWithRetainDiscarded
 ```
 
 To test job failures:
@@ -440,7 +440,7 @@ job.perform_now
 To test retention on discard:
 
 ```ruby
-job = Arj::Test::JobWithKeepDiscarded.perform_later(StandardError, 'oh, hi')
+job = Arj::Test::JobWithRetainDiscarded.perform_later(StandardError, 'oh, hi')
 2.times { job.perform_now }
 job.discarded?
 job.discarded_at

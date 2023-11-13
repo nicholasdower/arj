@@ -19,7 +19,7 @@ module Arj
     #
     #   class SampleJob < ActiveJob::Base
     #     include Arj
-    #     include Arj::Extensions::KeepDiscarded
+    #     include Arj::Extensions::RetainDiscarded
     #   end
     #
     #   job = SampleJob.perform_later
@@ -28,19 +28,19 @@ module Arj
     #   job.discarded?
     #   job.discarded_at
     #   Arj.discarded
-    module KeepDiscarded
+    module RetainDiscarded
       # An optional String representing a shard.
       #
       # @return [Time]
       attr_accessor :discarded_at
 
-      # Class methods added to jobs which include {Arj::Extensions::KeepDiscarded}.
+      # Class methods added to jobs which include {Arj::Extensions::RetainDiscarded}.
       module ClassMethods
         # Enables retention of discarded jobs (the default behavior).
         #
         # @return [NilClass]
-        def keep_discarded
-          @keep_discarded = true
+        def retain_discarded
+          @retain_discarded = true
           nil
         end
 
@@ -48,15 +48,15 @@ module Arj
         #
         # @return [NilClass]
         def destroy_discarded
-          @keep_discarded = false
+          @retain_discarded = false
           nil
         end
 
         # Returns +true+ if discarded jobs will be retained in the database.
         #
         # @return [Boolean]
-        def keep_discarded?
-          @keep_discarded.nil? ? true : @keep_discarded
+        def retain_discarded?
+          @retain_discarded.nil? ? true : @retain_discarded
         end
 
         # Arj Callback invoked when a job is to be discarded.
@@ -64,7 +64,7 @@ module Arj
         # @return [NilClass]
         def on_discard(job)
           job.discarded_at = Time.now.utc
-          if keep_discarded?
+          if retain_discarded?
             Arj.save!(job)
           else
             Arj.record_class.find(job.job_id)&.destroy!
@@ -73,12 +73,12 @@ module Arj
         end
       end
 
-      # Extends the specified class with {Arj::Extensions::KeepDiscarded::ClassMethods}.
+      # Extends the specified class with {Arj::Extensions::RetainDiscarded::ClassMethods}.
       #
       # @param clazz [Class]
       # @return [Class]
       def self.included(clazz)
-        clazz.extend(Arj::Extensions::KeepDiscarded::ClassMethods)
+        clazz.extend(Arj::Extensions::RetainDiscarded::ClassMethods)
         clazz.before_enqueue do |job|
           job.discarded_at = nil
         end

@@ -2,14 +2,14 @@
 
 require_relative '../../spec_helper'
 
-describe Arj::Extensions::KeepDiscarded do
+describe Arj::Extensions::RetainDiscarded do
   # Test that we create the job here if it was never enqueued
   # Test that a discarded job can be re-enqueued
   before do
-    stub_const('Arj::KeepDiscardedJob', Class.new(ActiveJob::Base))
-    Arj::KeepDiscardedJob.class_eval do
+    stub_const('Arj::RetainDiscardedJob', Class.new(ActiveJob::Base))
+    Arj::RetainDiscardedJob.class_eval do
       include Arj
-      include Arj::Extensions::KeepDiscarded
+      include Arj::Extensions::RetainDiscarded
 
       def perform
         raise 'oh, hi'
@@ -26,7 +26,7 @@ describe Arj::Extensions::KeepDiscarded do
     end
 
     context 'serialization' do
-      let(:job) { Arj::KeepDiscardedJob.perform_later }
+      let(:job) { Arj::RetainDiscardedJob.perform_later }
 
       context 'when discarded_at is updated' do
         subject { Arj.update!(job, discarded_at: Time.now.utc) }
@@ -54,7 +54,7 @@ describe Arj::Extensions::KeepDiscarded do
       subject { Arj.sole }
 
       context 'when a job class with discarded_at is retrieved' do
-        let(:job) { Arj::KeepDiscardedJob.perform_later }
+        let(:job) { Arj::RetainDiscardedJob.perform_later }
 
         before { job.perform_now rescue nil }
 
@@ -75,7 +75,7 @@ describe Arj::Extensions::KeepDiscarded do
     context '.discarded?' do
       subject { job.discarded? }
 
-      let(:job) { Arj::KeepDiscardedJob.perform_later }
+      let(:job) { Arj::RetainDiscardedJob.perform_later }
 
       context 'when the job has been discarded' do
         before { job.perform_now rescue nil }
@@ -89,11 +89,11 @@ describe Arj::Extensions::KeepDiscarded do
     context 'when a subclass disables retention of discarded jobs' do
       subject { job.perform_now }
 
-      let(:job) { Arj::DoNotKeepDiscardedJob.perform_later }
+      let(:job) { Arj::DoNotRetainDiscardedJob.perform_later }
 
       before do
-        stub_const('Arj::DoNotKeepDiscardedJob', Class.new(Arj::KeepDiscardedJob))
-        Arj::DoNotKeepDiscardedJob.class_eval do
+        stub_const('Arj::DoNotRetainDiscardedJob', Class.new(Arj::RetainDiscardedJob))
+        Arj::DoNotRetainDiscardedJob.class_eval do
           destroy_discarded
 
           def perform
@@ -115,13 +115,13 @@ describe Arj::Extensions::KeepDiscarded do
     context 'when a subclass enables retention of discarded jobs' do
       subject { job.perform_now }
 
-      let(:job) { Arj::ButKeepDiscardedJob.perform_later }
+      let(:job) { Arj::ButRetainDiscardedJob.perform_later }
 
       before do
-        stub_const('Arj::DoNotKeepDiscardedJob', Class.new(ActiveJob::Base))
-        Arj::DoNotKeepDiscardedJob.class_eval do
+        stub_const('Arj::DoNotRetainDiscardedJob', Class.new(ActiveJob::Base))
+        Arj::DoNotRetainDiscardedJob.class_eval do
           include Arj
-          include Arj::Extensions::KeepDiscarded
+          include Arj::Extensions::RetainDiscarded
 
           destroy_discarded
 
@@ -129,9 +129,9 @@ describe Arj::Extensions::KeepDiscarded do
             raise 'oh, hi'
           end
         end
-        stub_const('Arj::ButKeepDiscardedJob', Class.new(Arj::DoNotKeepDiscardedJob))
-        Arj::ButKeepDiscardedJob.class_eval do
-          keep_discarded
+        stub_const('Arj::ButRetainDiscardedJob', Class.new(Arj::DoNotRetainDiscardedJob))
+        Arj::ButRetainDiscardedJob.class_eval do
+          retain_discarded
 
           def perform
             raise 'oh, hi'
@@ -144,7 +144,7 @@ describe Arj::Extensions::KeepDiscarded do
         expect { subject }.to raise_error(StandardError, 'oh, hi')
       end
 
-      it 'keeps the job' do
+      it 'retains the job' do
         expect { subject rescue nil }.not_to change(Job, :count).from(1)
       end
     end
@@ -152,7 +152,7 @@ describe Arj::Extensions::KeepDiscarded do
 
   context 'when shard not added to jobs table' do
     context '#serialize' do
-      subject { Arj::KeepDiscardedJob.perform_later.serialize }
+      subject { Arj::RetainDiscardedJob.perform_later.serialize }
 
       it 'raises' do
         expect { subject }.to raise_error(StandardError, 'Job class missing discarded_at attribute')
@@ -160,7 +160,7 @@ describe Arj::Extensions::KeepDiscarded do
     end
 
     context '#deserialize' do
-      subject { Arj::KeepDiscardedJob.new.deserialize({}) }
+      subject { Arj::RetainDiscardedJob.new.deserialize({}) }
 
       it 'raises' do
         expect { subject }.to raise_error(StandardError, 'Job data missing discarded_at attribute')

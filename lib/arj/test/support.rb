@@ -14,7 +14,7 @@ module Arj
   # - {JobWithShard}         - A test job with an added +shard+ column.
   # - {JobWithLastError}     - A test job with an added +last_error+ column.
   # - {JobWithTimeout}       - A test job with a timeout.
-  # - {JobWithKeepDiscarded} - A test job which is retained when discarded.
+  # - {JobWithRetainDiscarded} - A test job which is retained when discarded.
   module Test
     include Query
 
@@ -178,9 +178,9 @@ module Arj
       timeout_after 1.second
     end
 
-    # A test {Job} which is retained when discarded. See: {Arj::Extensions::KeepDiscarded}.
-    class JobWithKeepDiscarded < Arj::Test::Job
-      include Arj::Extensions::KeepDiscarded
+    # A test {Job} which is retained when discarded. See: {Arj::Extensions::RetainDiscarded}.
+    class JobWithRetainDiscarded < Arj::Test::Job
+      include Arj::Extensions::RetainDiscarded
 
       retry_on Exception, attempts: 2
     end

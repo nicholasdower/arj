@@ -430,7 +430,7 @@ describe Arj::Relation do
       end
 
       context 'when no discarded jobs exist' do
-        before { Arj::Test::JobWithKeepDiscarded.new.perform_now }
+        before { Arj::Test::JobWithRetainDiscarded.new.perform_now }
 
         it 'returns zero jobs' do
           expect(subject.size).to eq(0)
@@ -440,7 +440,7 @@ describe Arj::Relation do
       context 'when discarded jobs exist' do
         before do
           Arj::Test::Job.perform_later
-          job = Arj::Test::JobWithKeepDiscarded.set(queue: 'some queue').perform_later(StandardError)
+          job = Arj::Test::JobWithRetainDiscarded.set(queue: 'some queue').perform_later(StandardError)
           job.perform_now
           job.perform_now rescue nil
         end
