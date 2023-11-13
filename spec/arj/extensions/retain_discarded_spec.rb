@@ -31,11 +31,11 @@ describe Arj::Extensions::RetainDiscarded do
 
         it 'updates discarded_at in the database' do
           subject
-          expect(Job.first.discarded_at).to eq(Time.now.utc)
+          expect(Job.first.discarded_at.to_s).to eq(Time.now.utc.to_s)
         end
 
         it "updates the job's discarded_at" do
-          expect { subject }.to change(job, :discarded_at).from(nil).to(Time.now.utc)
+          expect { subject }.to change { job.discarded_at&.to_s }.from(nil).to(Time.now.utc.to_s)
         end
       end
 
@@ -57,7 +57,7 @@ describe Arj::Extensions::RetainDiscarded do
         before { job.perform_now rescue nil }
 
         it 'sets discarded_at from the database' do
-          expect(subject.discarded_at).to eq(Time.now.utc)
+          expect(subject.discarded_at.to_s).to eq(Time.now.utc.to_s)
         end
       end
 
@@ -97,7 +97,7 @@ describe Arj::Extensions::RetainDiscarded do
 
       it 'sets discarded_at' do
         subject rescue nil
-        expect(Arj.last.discarded_at).to eq(Time.now.utc)
+        expect(Arj.last.discarded_at.to_s).to eq(Time.now.utc.to_s)
       end
 
       it 'does not set scheduled_at' do
@@ -141,7 +141,7 @@ describe Arj::Extensions::RetainDiscarded do
       end
 
       it 'sets discarded_at to nil' do
-        expect { subject }.to change { Arj.last.discarded_at }.from(Time.now.utc).to(nil)
+        expect { subject }.to change { Arj.last.discarded_at&.to_s }.from(Time.now.utc.to_s).to(nil)
       end
 
       it 'sets successfully_enqueued? to true' do
