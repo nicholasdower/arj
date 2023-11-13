@@ -18,9 +18,10 @@ Allow query interface to be used with other backends.
 Rewrite release script in Ruby
 Should I serialize `arguments:` in Relation?
 Clarify separatation between update and update_job
-Clear scheduled_at and enqueued_at on discard.
 Better name for todo method.
 Fix LEVEL when running rspec from console
 Rename Query to QueryMethods
 Rename Persistence to PersistenceMethods
+Add test for the enqueued_at and locale hack.
 Send a change for ActiveJob to serialize enqueued_at, locale
+Change first and last behavior when no ID column exists

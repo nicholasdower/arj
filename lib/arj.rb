@@ -101,8 +101,11 @@ module Arj
     #
     # @return [Boolean] +true+
     def save!(job)
-      record = Arj.record_class.find(job.job_id)
-      record.update!(Persistence.record_attributes(job)).tap { Persistence.from_record(record, job) }
+      if (record = Arj.record_class.find_by(job_id: job.job_id))
+        record.update!(Persistence.record_attributes(job)).tap { Persistence.from_record(record, job) }
+      else
+        Arj.record_class.new(Persistence.record_attributes(job)).save!
+      end
     end
 
     # Updates the database record associated with the specified job. Raises if the record is invalid.

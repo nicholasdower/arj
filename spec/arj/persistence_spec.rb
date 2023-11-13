@@ -80,8 +80,9 @@ describe Arj::Persistence do
         context 'when the database record has been deleted' do
           before { Job.destroy_all }
 
-          it 'raises' do
-            expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
+          it 'recreates the record' do
+            expect { subject }.to change(Job, :count).from(0).to(1)
+            expect(Job.last.job_id).to eq(job.job_id)
           end
         end
       end

@@ -3,8 +3,6 @@
 require_relative '../../spec_helper'
 
 describe Arj::Extensions::RetainDiscarded do
-  # Test that we create the job here if it was never enqueued
-  # Test that a discarded job can be re-enqueued
   before do
     stub_const('Arj::RetainDiscardedJob', Class.new(ActiveJob::Base))
     Arj::RetainDiscardedJob.class_eval do
@@ -83,6 +81,71 @@ describe Arj::Extensions::RetainDiscarded do
         it 'returns true' do
           expect(subject).to eq(true)
         end
+      end
+    end
+
+    context 'when job discarded before being enqueued' do
+      let(:subject) { Arj::RetainDiscardedJob.set(wait: 1.minute).perform_now }
+
+      it 'raises the error raised by the job' do
+        expect { subject }.to raise_error(StandardError, 'oh, hi')
+      end
+
+      it 'saves the job to the database' do
+        expect { subject rescue nil }.to change(Job, :count).from(0).to(1)
+      end
+
+      it 'sets discarded_at' do
+        subject rescue nil
+        expect(Arj.last.discarded_at).to eq(Time.now.utc)
+      end
+
+      it 'does not set scheduled_at' do
+        subject rescue nil
+        expect(Arj.last.scheduled_at).to be_nil
+      end
+
+      it 'does not set enqueued_at' do
+        subject rescue nil
+        expect(Arj.last.enqueued_at).to be_nil
+      end
+
+      it 'sets executions' do
+        subject rescue nil
+        expect(Arj.last.executions).to eq(1)
+      end
+
+      it 'sets successfully_enqueued? to false' do
+        subject rescue nil
+        expect(Arj.last.successfully_enqueued?).to eq(false)
+      end
+    end
+
+    context 'when discarded job enqueued' do
+      let(:subject) { job.enqueue }
+
+      let(:job) { Arj::RetainDiscardedJob.set(wait: 1.minute).perform_later }
+
+      before { job.perform_now rescue nil }
+
+      it 'sets enqueued_at' do
+        expect { subject }.to change { Arj.last.enqueued_at&.to_s }.from(nil).to(Time.now.utc.to_s)
+      end
+
+      it 'does not change executions' do
+        expect { subject }.not_to change { Arj.last.executions }.from(1)
+      end
+
+      it 'does not set scheduled_at' do
+        expect { subject }.not_to change { Arj.last.scheduled_at }.from(nil)
+      end
+
+      it 'sets discarded_at to nil' do
+        expect { subject }.to change { Arj.last.discarded_at }.from(Time.now.utc).to(nil)
+      end
+
+      it 'sets successfully_enqueued? to true' do
+        expect { subject }.to change { Arj.last.successfully_enqueued? }.from(false).to(true)
       end
     end
 

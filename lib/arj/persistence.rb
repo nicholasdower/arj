@@ -53,8 +53,7 @@ module Arj
         if (record = Arj.record_class.find_by(job_id: job.job_id))
           record.update!(Persistence.record_attributes(job))
         else
-          attributes = Persistence.record_attributes(job)
-          record = Arj.record_class.create!(attributes)
+          record = Arj.record_class.create!(Persistence.record_attributes(job))
         end
         Persistence.from_record(record, job)
 
