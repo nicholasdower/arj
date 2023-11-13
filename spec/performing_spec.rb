@@ -84,7 +84,7 @@ describe 'performing' do
       before do
         stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
         Arj::SampleJob.class_eval do
-          include Arj::Base
+          include Arj
 
           def perform
             enqueue
@@ -142,6 +142,18 @@ describe 'performing' do
 
       it 'deletes the database record' do
         expect { subject }.to change(Job, :count).from(1).to(0)
+      end
+
+      context 'when scheduled_at is set' do
+        let!(:job) { Arj::Test::Job.set(wait_until: 1.second.ago).perform_later }
+
+        it 'clears scheduled_at' do
+          expect { subject }.to change { job.scheduled_at&.to_s }.from(1.second.ago.to_s).to(nil)
+        end
+      end
+
+      it 'clears enqueued_at' do
+        expect { subject }.to change { job.enqueued_at&.to_s }.from(Time.now.utc.to_s).to(nil)
       end
 
       context 'when the database record no longer exists' do

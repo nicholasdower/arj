@@ -9,6 +9,6 @@ if ENV['COVERAGE'] == '1'
   )
 
   SimpleCov.start do
-    add_filter 'script/'
+    add_filter %w[script/ spec/]
   end
 end

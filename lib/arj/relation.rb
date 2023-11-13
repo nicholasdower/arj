@@ -18,7 +18,7 @@ module Arj
     # List of Arj-specific query methods.
     #
     # @return [Array<Symbol>]
-    QUERY_METHODS = %i[failing queue executable todo].freeze
+    QUERY_METHODS = %i[failing queue executable todo discarded].freeze
 
     include Arj::Documentation::ActiveRecordRelation
     include Arj::Documentation::Enumerable

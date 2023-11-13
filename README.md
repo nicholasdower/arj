@@ -79,11 +79,11 @@ If not using Rails:
 ActiveJob::Base.queue_adapter = :arj
 ```
 
-Include the `Arj::Base` module:
+Include the `Arj` module:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
 end
 ```
 
@@ -112,7 +112,7 @@ Optionally, query methods can also be added to job classes:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Query
 end
 
@@ -123,10 +123,10 @@ SampleJob.all # All SampleJobs
 
 ```ruby
 class SampleJobOne < ActiveJob::Base
-  include Arj::Base
+  include Arj
 end
 class SampleJobTwo < ActiveJob::Base
-  include Arj::Base
+  include Arj
 end
 
 class SampleJobs
@@ -157,7 +157,7 @@ Optionally, these methods can be added to job classes:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Persistence
 end
 ```
@@ -211,7 +211,7 @@ Next, include the `Shard` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Extensions::Shard
 end
 ```
@@ -242,7 +242,7 @@ Next, include the `LastError` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Extensions::LastError
 end
 ```
@@ -251,7 +251,7 @@ end
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Extensions::LastError
 
   retry_on Exception
@@ -276,7 +276,7 @@ First, include the `Timeout` extension:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Extensions::Timeout
 
   def perform
@@ -295,7 +295,7 @@ Optionally, override the default timeout for a job class:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Extensions::Timeout
 
   timeout_after 5.seconds
@@ -306,7 +306,7 @@ end
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj::Base
+  include Arj
   include Arj::Extensions::Timeout
 
   timeout_after 1.second
@@ -321,6 +321,55 @@ end
 ```
 
 ### KeepDiscarded
+
+Provides the ability to retain discarded jobs.
+
+#### Setup
+
+First, apply a migration:
+
+```ruby
+class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    add_column :jobs, :discarded_at, :datetime
+    change_column :jobs, :enqueued_at, :datetime, null: true
+  end
+
+  def self.down
+    remove_column :jobs, :discarded_at
+    change_column :jobs, :enqueued_at, :datetime, null: false
+  end
+end
+```
+
+Next, include the `KeepDiscarded` extension:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj
+  include Arj::Extensions::KeepDiscarded
+end
+```
+
+#### Example Usage
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj
+  include Arj::Extensions::KeepDiscarded
+
+  def perform
+    raise 'oh, hi'
+  end
+end
+
+job = SampleJob.perform_later
+job.perform_now rescue nil
+
+job.discarded?
+job.discarded_at
+Arj.discarded
+```
 
 ### Database ID
 

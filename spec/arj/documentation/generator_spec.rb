@@ -14,6 +14,8 @@ describe Arj::Documentation::Generator do
 
         module Arj
           module SampleModule
+            # @!method discarded
+            #   See: {Arj::Relation#discarded}
             # @!method executable
             #   See: {Arj::Relation#executable}
             # @!method failing
@@ -58,6 +60,8 @@ describe Arj::Documentation::Generator do
 
           module Arj
             module SampleModule
+              # @!method discarded
+              #   See: {Arj::Relation#discarded}
               # @!method executable
               #   See: {Arj::Relation#executable}
               # @!method failing

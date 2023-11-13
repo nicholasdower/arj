@@ -5,26 +5,36 @@ module Arj
     # Provides the ability to retain discarded jobs.
     #
     # Example usage:
-    #   class AddFailedAtToJobs < ActiveRecord::Migration[7.1]
-    #     def change
-    #       add_column :jobs, :discarded_at, :datetime
-    #     end
+    #   class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
+    #    def self.up
+    #      add_column :jobs, :discarded_at, :datetime
+    #      change_column :jobs, :enqueued_at, :datetime, null: true
+    #    end
+    #
+    #    def self.down
+    #      remove_column :jobs, :discarded_at
+    #      change_column :jobs, :enqueued_at, :datetime, null: false
+    #    end
     #   end
     #
     #   class SampleJob < ActiveJob::Base
+    #     include Arj
     #     include Arj::Extensions::KeepDiscarded
-    #
-    #     retry_on Exception
     #   end
     #
-    #   SampleJob.perform_later
+    #   job = SampleJob.perform_later
+    #   job.perform_now rescue nil
+    #
+    #   job.discarded?
+    #   job.discarded_at
+    #   Arj.discarded
     module KeepDiscarded
       # An optional String representing a shard.
       #
       # @return [Time]
       attr_accessor :discarded_at
 
-      # Class methods added to jobs which include {Arj::Extensions::FailedAt}.
+      # Class methods added to jobs which include {Arj::Extensions::KeepDiscarded}.
       module ClassMethods
         # Enables retention of discarded jobs (the default behavior).
         #
@@ -46,21 +56,24 @@ module Arj
         #
         # @return [Boolean]
         def keep_discarded?
-          @keep_discarded || true
+          @keep_discarded.nil? ? true : @keep_discarded
         end
 
         # Arj Callback invoked when a job is to be discarded.
+        #
+        # @return [NilClass]
         def on_discard(job)
           job.discarded_at = Time.now.utc
           if keep_discarded?
             Arj.save!(job)
           else
-            Arj.record_class.find(job_id).destroy!
+            Arj.record_class.find(job.job_id)&.destroy!
           end
+          nil
         end
       end
 
-      # Extends the specified class with {Arj::FailedAt::ClassMethods}.
+      # Extends the specified class with {Arj::Extensions::KeepDiscarded::ClassMethods}.
       #
       # @param clazz [Class]
       # @return [Class]

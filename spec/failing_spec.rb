@@ -85,6 +85,18 @@ describe 'failing' do
       it "does not set the original job's exception_executions" do
         expect { subject rescue nil }.not_to change { original_job.exception_executions }.from({})
       end
+
+      context 'when scheduled_at is set' do
+        let(:enqueue) { Arj::Test::Job.set(wait_until: 1.second.ago).perform_later(error, 'error') }
+
+        it 'clears scheduled_at' do
+          expect { subject rescue nil }.to change { job.scheduled_at&.to_s }.from(1.second.ago.to_s).to(nil)
+        end
+      end
+
+      it 'clears enqueued_at' do
+        expect { subject rescue nil }.to change { job.enqueued_at&.to_s }.from(Time.now.utc.to_s).to(nil)
+      end
     end
 
     context 'with retries' do
@@ -147,8 +159,43 @@ describe 'failing' do
           expect { subject rescue nil }.to change(Job, :count).from(1).to(0)
         end
 
+        context 'when job class implements on_discard' do
+          let(:enqueue) do
+            stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
+            Arj::SampleJob.class_eval do
+              include Arj
+              retry_on Exception, wait: 1.minute, attempts: 2
+
+              def perform
+                raise 'oh, hi'
+              end
+
+              def self.on_discard(_job)
+                @discarded = true
+              end
+            end
+            Arj::SampleJob.perform_later
+          end
+
+          it 'does not delete the job' do
+            expect { subject rescue nil }.not_to change(Job, :count).from(1)
+          end
+        end
+
         it "increments the original job's executions" do
           expect { subject rescue nil }.to change(original_job, :executions).from(1).to(2)
+        end
+
+        context 'when scheduled_at is set' do
+          let(:enqueue) { Arj::Test::Job.set(wait_until: Time.now.utc).perform_later(error, 'error') }
+
+          it 'clears scheduled_at' do
+            expect { subject rescue nil }.to change { job.scheduled_at&.to_s }.from(1.minute.from_now.to_s).to(nil)
+          end
+        end
+
+        it 'clears enqueued_at' do
+          expect { subject rescue nil }.to change { job.enqueued_at&.to_s }.from(Time.now.utc.to_s).to(nil)
         end
       end
     end

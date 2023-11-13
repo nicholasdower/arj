@@ -4,6 +4,8 @@ module Arj
   module Documentation
     # Provides documentation (and autocomplete) for {Arj::Relation} query methods.
     module ArjRelation
+      # @!method discarded
+      #   See: {Arj::Relation#discarded}
       # @!method executable
       #   See: {Arj::Relation#executable}
       # @!method failing

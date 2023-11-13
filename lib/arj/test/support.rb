@@ -72,7 +72,7 @@ module Arj
     class Job < ActiveJob::Base
       retry_on Arj::Test::Error, wait: 1.minute, attempts: 2
 
-      include Arj::Base
+      include Arj
       include Query
       include Persistence
 

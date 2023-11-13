@@ -411,4 +411,44 @@ describe Arj::Relation do
       end
     end
   end
+
+  context '#discarded' do
+    subject { Arj.discarded.to_a }
+
+    context 'when discarded_at not added to jobs table' do
+      it 'raises' do
+        expect { subject }.to raise_error(StandardError, 'Job class missing discarded_at attribute')
+      end
+    end
+
+    context 'when discarded_at added to jobs table' do
+      before { TestDb.migrate(AddDiscardedAtToJobs, :up) }
+
+      after do
+        Job.destroy_all
+        TestDb.migrate(AddDiscardedAtToJobs, :down)
+      end
+
+      context 'when no discarded jobs exist' do
+        before { Arj::Test::JobWithKeepDiscarded.new.perform_now }
+
+        it 'returns zero jobs' do
+          expect(subject.size).to eq(0)
+        end
+      end
+
+      context 'when discarded jobs exist' do
+        before do
+          Arj::Test::Job.perform_later
+          job = Arj::Test::JobWithKeepDiscarded.set(queue: 'some queue').perform_later(StandardError)
+          job.perform_now
+          job.perform_now rescue nil
+        end
+
+        it 'returns the failing jobs' do
+          expect(subject.map(&:queue_name).sort).to eq(['some queue'])
+        end
+      end
+    end
+  end
 end

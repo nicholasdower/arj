@@ -18,7 +18,7 @@ module Arj
     #   end
     #
     #   job = SampleJob.perform_now
-    #   puts job.last_error
+    #   job.last_error
     module LastError
       # Wraps an error String to prevent the entire message and backtrace from being displayed when pretty printing.
       class Wrapper
@@ -96,7 +96,7 @@ module Arj
       # @return [Hash]
       def serialize
         unless Arj.record_class.attribute_names.include?('last_error')
-          raise "#{Arj.record_class.name} class missing shard attribute"
+          raise "#{Arj.record_class.name} class missing last_error attribute"
         end
 
         super.merge('last_error' => @last_error)
