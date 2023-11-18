@@ -3,7 +3,7 @@
 require 'active_job'
 require 'active_job/base'
 require_relative '../persistence'
-require_relative '../query'
+require_relative '../extensions/query'
 
 module Arj
   # Arj testing module. Provides job classes for use in tests.
@@ -16,9 +16,9 @@ module Arj
   # - {JobWithTimeout}       - A test job with a timeout.
   # - {JobWithRetainDiscarded} - A test job which is retained when discarded.
   module Test
-    include Query
+    include Arj::Extensions::Query
 
-    # Overrides {Query::ClassMethods.all} to provide a scope for test jobs.
+    # Overrides {Arj::Extensions::Query::ClassMethods.all} to provide a scope for test jobs.
     #
     # Example usage:
     #   Arj::Test::Job.perform_later
@@ -73,8 +73,8 @@ module Arj
       retry_on Arj::Test::Error, wait: 1.minute, attempts: 2
 
       include Arj
-      include Query
-      include Persistence
+      include Arj::Extensions::Query
+      include Arj::Persistence
 
       def initialize(*args)
         proc = args[0].is_a?(Proc) ? args.shift : nil

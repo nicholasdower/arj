@@ -5,7 +5,7 @@ require_relative 'arj/arj_adapter'
 require_relative 'arj/documentation'
 require_relative 'arj/extensions'
 require_relative 'arj/persistence'
-require_relative 'arj/query'
+require_relative 'arj/extensions/query'
 require_relative 'arj/relation'
 require_relative 'arj/version'
 require_relative 'arj/worker'
@@ -16,7 +16,7 @@ require_relative 'arj/worker'
 #
 # The Arj module provides:
 # - Access to the global Arj setting {record_class}.
-# - Job query methods. See: {Arj::Query::ClassMethods}.
+# - Job query methods. See: {Arj::Extensions::Query}.
 # - Job persistence methods similar to {Arj::Persistence}.
 module Arj
   DEFAULT_RECORD_CLASS = 'Job'
@@ -24,7 +24,7 @@ module Arj
 
   @record_class = DEFAULT_RECORD_CLASS
 
-  extend Query::ClassMethods
+  extend Arj::Extensions::Query::ClassMethods
 
   # Registers job callbacks required
   #

@@ -5,7 +5,7 @@ require_relative '../spec_helper'
 describe Arj::Persistence do
   [
     [Arj, true],
-    [Arj::Query, false]
+    [Arj::Persistence, false]
   ].each do |target_class, class_methods|
     context "#{target_class} methods" do
       let(:description) { class_methods ? "#{target_class}." : "#{target_class}#" }

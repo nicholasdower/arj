@@ -113,7 +113,7 @@ Optionally, query methods can also be added to job classes:
 ```ruby
 class SampleJob < ActiveJob::Base
   include Arj
-  include Arj::Query
+  include Arj::Extensions::Query
 end
 
 SampleJob.all # All SampleJobs
@@ -130,7 +130,7 @@ class SampleJobTwo < ActiveJob::Base
 end
 
 class SampleJobs
-  include Arj::Query
+  include Arj::Extensions::Query
 
   def self.all
     Arj.where(job_class: [SampleJobOne, SampleJobTwo].map(&:name))

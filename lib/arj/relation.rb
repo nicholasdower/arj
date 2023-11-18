@@ -13,7 +13,7 @@ module Arj
   # Note that records will not be mapped to jobs if they are missing one or more attributes (for instance when using
   # {#select select}).
   #
-  # See: {Query}
+  # See: {Arj::Extensions::Query}
   class Relation
     # List of Arj-specific query methods.
     #

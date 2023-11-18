@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require 'pp'
-require_relative '../spec_helper'
+require_relative '../../spec_helper'
 
-describe Arj::Query do
+describe Arj::Extensions::Query do
   context 'Arj.last' do
     subject { Arj.last }
 
@@ -120,7 +120,7 @@ describe Arj::Query do
     before do
       stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
       Arj::SampleJob.include(Arj)
-      Arj::SampleJob.include(Arj::Query)
+      Arj::SampleJob.include(Arj::Extensions::Query)
       Arj::Test::Job.perform_later('some arg')
       Arj::SampleJob.perform_later('some arg')
     end
