@@ -24,4 +24,3 @@ Rename Query to QueryMethods
 Rename Persistence to PersistenceMethods
 Add test for the enqueued_at and locale hack.
 Send a change for ActiveJob to serialize enqueued_at, locale
-Change first and last behavior when no ID column exists

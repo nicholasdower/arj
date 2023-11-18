@@ -63,6 +63,19 @@ end
 
 **Note**: The default table schema does not include an ID column. A schema with an ID column can be found [here](#database-id).
 
+Create a record class:
+
+```ruby
+class Job < ActiveRecord::Base
+  # By default, ActiveRecord will use the primary key for ordering when using methods like Job.first,
+  # Job.last, etc. This will not work well if the primary key is job_id (the default), since job_id is
+  # a UUID.
+  def self.implicit_order_column
+    %w[id created_at enqueued_at].find { attribute_names.include?(_1) }
+  end
+end
+```
+
 Configure the queue adapter.
 
 If using Rails:

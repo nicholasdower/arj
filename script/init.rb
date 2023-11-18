@@ -21,6 +21,9 @@ ActiveJob::Base.logger.level = level
 ActiveRecord::Migration.verbose = false unless level <= 1
 
 class Job < ActiveRecord::Base
+  def self.implicit_order_column
+    %w[id created_at enqueued_at].find { attribute_names.include?(_1) }
+  end
 end
 
 def add_default_jobs_columns(table)
