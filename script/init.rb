@@ -30,25 +30,9 @@ class Job < ActiveRecord::Base
   end
 end
 
-def add_default_jobs_columns(table)
-  table.string   :job_class,            null: false
-  table.string   :queue_name
-  table.integer  :priority
-  table.text     :arguments,            null: false
-  table.integer  :executions,           null: false
-  table.text     :exception_executions, null: false
-  table.string   :locale
-  table.string   :timezone
-  table.datetime :enqueued_at,          null: false
-  table.datetime :scheduled_at
-end
-
-class CreateJobs < ActiveRecord::Migration[7.1]
+class CreateJobs < Arj::Migration[7.1]
   def self.up
-    create_table :jobs, id: :string, primary_key: :job_id do |table|
-      add_default_jobs_columns(table)
-    end
-    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
+    create_jobs_table
   end
 
   def self.down
@@ -56,14 +40,9 @@ class CreateJobs < ActiveRecord::Migration[7.1]
   end
 end
 
-class CreateJobsWithId < ActiveRecord::Migration[7.1]
+class CreateJobsWithId < Arj::Migration[7.1]
   def self.up
-    create_table :jobs do |table|
-      table.string :job_id, null: false
-      add_default_jobs_columns(table)
-    end
-    add_index :jobs, :job_id, unique: true
-    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
+    create_jobs_table(extensions: [:id])
   end
 
   def self.down
@@ -71,35 +50,33 @@ class CreateJobsWithId < ActiveRecord::Migration[7.1]
   end
 end
 
-class AddShardToJobs < ActiveRecord::Migration[7.1]
+class AddShardToJobs < Arj::Migration[7.1]
   def self.up
-    add_column :jobs, :shard, :string
+    add_shard_extension
   end
 
   def self.down
-    remove_column :jobs, :shard
+    remove_shard_extension
   end
 end
 
-class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
+class AddLastErrorToJobs < Arj::Migration[7.1]
   def self.up
-    add_column :jobs, :last_error, :text
+    add_last_error_extension
   end
 
   def self.down
-    remove_column :jobs, :last_error
+    remove_last_error_extension
   end
 end
 
-class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
+class AddRetainDiscardedToJobs < Arj::Migration[7.1]
   def self.up
-    add_column :jobs, :discarded_at, :datetime
-    change_column :jobs, :enqueued_at, :datetime, null: true
+    add_retain_discarded_extension
   end
 
   def self.down
-    remove_column :jobs, :discarded_at
-    change_column :jobs, :enqueued_at, :datetime, null: false
+    remove_retain_discarded_extension
   end
 end
 

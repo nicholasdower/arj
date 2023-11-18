@@ -422,11 +422,11 @@ describe Arj::Relation do
     end
 
     context 'when discarded_at added to jobs table' do
-      before { TestDb.migrate(AddDiscardedAtToJobs, :up) }
+      before { TestDb.migrate(AddRetainDiscardedToJobs, :up) }
 
       after do
         Job.destroy_all
-        TestDb.migrate(AddDiscardedAtToJobs, :down)
+        TestDb.migrate(AddRetainDiscardedToJobs, :down)
       end
 
       context 'when no discarded jobs exist' do

@@ -5,16 +5,14 @@ module Arj
     # Provides the ability to retain discarded jobs.
     #
     # Example usage:
-    #   class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
-    #    def self.up
-    #      add_column :jobs, :discarded_at, :datetime
-    #      change_column :jobs, :enqueued_at, :datetime, null: true
-    #    end
+    #   class AddRetainDiscardedToJobs < Arj::Migration[7.1]
+    #     def self.up
+    #       add_retain_discarded_extension
+    #     end
     #
-    #    def self.down
-    #      remove_column :jobs, :discarded_at
-    #      change_column :jobs, :enqueued_at, :datetime, null: false
-    #    end
+    #     def self.down
+    #       remove_retain_discarded_extension
+    #     end
     #   end
     #
     #   class SampleJob < ActiveJob::Base

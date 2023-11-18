@@ -23,5 +23,7 @@ Fix LEVEL when running rspec from console
 Add test for the enqueued_at and locale hack.
 Send a change for ActiveJob to serialize enqueued_at, locale
 Add locking extensions
-Add basic set to README
-Add migrations to the API.
+Test that ActiveRecord load hooks do not run
+Figure out a way to run without including the Arj module.
+Tests for migrations
+Tests for default ordering with last, first, etc.

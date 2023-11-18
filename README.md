@@ -14,7 +14,7 @@ For more information on ActiveJob, see:
 
 ## Sections
 
-- [Setup](#setup)
+- [Basic Setup](#basic-setup)
 - [Worker](#worker)
 - [Querying](#querying)
 - [Persistence](#persistence)
@@ -25,10 +25,14 @@ For more information on ActiveJob, see:
   * [Shard Extension](#shard-extension)
   * [Timeout Extension](#timeout-extension)
   * [RetainDiscarded Extension](#retaindiscarded-extension)
-  * [Database ID Extension](#database-id-extension)
 - [Testing](#testing)
+- [Migrations](#migrations)
+- [ActiveJob Cheatsheet](#activejob-cheatsheet)
+  * [Creating Jobs](#creating-jobs)
+  * [Enqueuing Jobs](#enqueuing-jobs)
+  * [Executing Jobs](#executing-jobs)
 
-## Setup
+## Basic Setup
 
 Add the following to your Gemfile:
 
@@ -36,25 +40,14 @@ Add the following to your Gemfile:
 gem 'arj', '~> 0.0'
 ```
 
-Apply a database migration:
+Apply a database migration (See [Migrations](#migrations) for alternatives):
 
 ```ruby
-class CreateJobs < ActiveRecord::Migration[7.1]
+require 'arj/migration'
+
+class CreateJobs < Arj::Migration[7.1]
   def self.up
-    create_table :jobs, id: :string, primary_key: :job_id do |table|
-      table.string   :job_class,            null: false
-      table.string   :job_id,               null: false
-      table.string   :queue_name
-      table.integer  :priority
-      table.text     :arguments,            null: false
-      table.integer  :executions,           null: false
-      table.text     :exception_executions, null: false
-      table.string   :locale,               null: false
-      table.string   :timezone,             null: false
-      table.datetime :enqueued_at,          null: false
-      table.datetime :scheduled_at
-    end
-    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
+    create_jobs_table
   end
 
   def self.down
@@ -63,19 +56,18 @@ class CreateJobs < ActiveRecord::Migration[7.1]
 end
 ```
 
-**Note**: The default table schema does not include an ID column. A schema with an ID column can be found [here](#database-id).
-
 Create a record class:
 
 ```ruby
+require 'active_record/base'
+require 'arj'
+
 class Job < ActiveRecord::Base
-  # Optionally, override implicit_order_column to ensure sensible ordering from methods
-  # like Job.first and Job.last. Not required if using an ID column.
   def self.implicit_order_column
-    %w[id created_at enqueued_at].find { attribute_names.include?(_1) }
+    # Order by enqueued_at when using Job.last, Job.first, etc.
+    'enqueued_at'
   end
 
-  # Optionally add a method which maps record objects to job objects. Use like Job.all.map(&:to_arj).
   def to_arj
     Arj.from(self)
   end
@@ -84,23 +76,23 @@ end
 
 Configure the queue adapter.
 
-If using Rails:
-
 ```ruby
+require 'arj'
+
+# If using Rails:
 class MyApplication < Rails::Application
   config.active_job.queue_adapter = :arj
 end
-```
 
-If not using Rails:
-
-```ruby
+# If not using Rails:
 ActiveJob::Base.queue_adapter = :arj
 ```
 
-Include the `Arj` module:
+Include the `Arj` module in your job classes:
 
 ```ruby
+require 'arj'
+
 class SampleJob < ActiveJob::Base
   include Arj
 end
@@ -407,39 +399,6 @@ job.discarded_at
 Arj.discarded
 ```
 
-### Database ID Extension
-
-To create the jobs table with an id column, use this alternative migration:
-
-```ruby
-class CreateJobs < ActiveRecord::Migration[7.1]
-  def self.up
-    create_table :jobs do |table|
-      table.string   :job_id,               null: false
-      table.string   :job_class,            null: false
-      table.string   :job_id,               null: false
-      table.string   :queue_name
-      table.integer  :priority
-      table.text     :arguments,            null: false
-      table.integer  :executions,           null: false
-      table.text     :exception_executions, null: false
-      table.string   :locale,               null: false
-      table.string   :timezone,             null: false
-      table.datetime :enqueued_at,          null: false
-      table.datetime :scheduled_at
-    end
-    add_index :jobs, :job_id, unique: true
-    add_index :jobs, [ :priority, :scheduled_at, :enqueued_at ]
-  end
-
-  def self.down
-    drop_table :jobs
-  end
-end
-```
-
-This will result in the `provider_job_id` job attribute being populated.
-
 ## Testing
 
 The following sample jobs are provided for use in tests:
@@ -481,6 +440,24 @@ job = Arj::Test::JobWithRetainDiscarded.perform_later(StandardError, 'oh, hi')
 job.discarded?
 job.discarded_at
 ```
+
+## Migrations
+
+To create the jobs table with an `id` column as the primary key rather than `job_id`:
+
+```ruby
+class CreateJobsWithId < Arj::Migration[7.1]
+  def self.up
+    create_jobs_table(extensions: [:id])
+  end
+
+  def self.down
+    drop_table :jobs
+  end
+end
+```
+
+This will result in the `provider_job_id` job attribute being populated.
 
 ## ActiveJob Cheatsheet
 

@@ -5,14 +5,14 @@ module Arj
     # Adds a +shard+ attribute to a job class.
     #
     # Example usage:
-    #   class AddShardToJobs < ActiveRecord::Migration[7.1]
-    #     def change
-    #       add_column :jobs, :shard, :string
+    #   class AddShardToJobs < Arj::Migration[7.1]
+    #     def self.up
+    #       add_shard_extension
     #     end
-    #   end
     #
-    #   class SampleJob < ActiveJob::Base
-    #     include Arj::Extensions::Shard
+    #     def self.down
+    #       remove_shard_extension
+    #     end
     #   end
     #
     #   SampleJob.set(shard: 'some shard').perform_later

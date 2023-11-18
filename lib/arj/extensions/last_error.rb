@@ -5,9 +5,13 @@ module Arj
     # Adds a +last_error+ attribute to a job class.
     #
     # Example usage:
-    #   class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
-    #     def change
-    #       add_column :jobs, :last_error, :text
+    #   class AddLastErrorToJobs < Arj::Migration[7.1]
+    #     def self.up
+    #       add_last_error_extension
+    #     end
+    #
+    #     def self.down
+    #       remove_last_error_extension
     #     end
     #   end
     #
