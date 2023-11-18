@@ -20,7 +20,8 @@ Should I serialize `arguments:` in Relation?
 Clarify separatation between update and update_job
 Better name for todo method.
 Fix LEVEL when running rspec from console
-Rename Query to QueryMethods
-Rename Persistence to PersistenceMethods
 Add test for the enqueued_at and locale hack.
 Send a change for ActiveJob to serialize enqueued_at, locale
+Add locking extensions
+Add basic set to README
+Add migrations to the API.

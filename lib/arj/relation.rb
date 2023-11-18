@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'active_record'
-require_relative 'persistence'
 require_relative '../arj'
 require_relative '../arj/documentation/active_record_relation'
 
@@ -173,7 +172,7 @@ module Arj
       # If all attributes are present, return a job, otherwise, return the record.
       # Attributes may be missing if, for instance, `select` was used.
       if (Arj.record_class.attribute_names - record.attributes.keys).empty?
-        Persistence.from_record(record)
+        Arj.from(record)
       else
         record
       end

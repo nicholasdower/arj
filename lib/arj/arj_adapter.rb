@@ -2,7 +2,7 @@
 
 require 'active_job'
 require 'active_job/base'
-require_relative 'persistence'
+require 'arj'
 
 # ActiveJob queue adapter for Arj.
 #
@@ -23,7 +23,7 @@ class ArjAdapter
   def enqueue(job)
     raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
-    Arj::Persistence.enqueue(job)
+    Arj.enqueue(job)
   end
 
   # Enqueue a job for execution at the specified time.
@@ -34,6 +34,6 @@ class ArjAdapter
   def enqueue_at(job, timestamp)
     raise "expected ActiveJob::Base, found #{job.class}" unless job.is_a?(ActiveJob::Base)
 
-    Arj::Persistence.enqueue(job, timestamp)
+    Arj.enqueue(job, timestamp)
   end
 end

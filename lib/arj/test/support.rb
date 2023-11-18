@@ -2,7 +2,7 @@
 
 require 'active_job'
 require 'active_job/base'
-require_relative '../persistence'
+require_relative '../extensions/persistence'
 require_relative '../extensions/query'
 
 module Arj
@@ -74,7 +74,7 @@ module Arj
 
       include Arj
       include Arj::Extensions::Query
-      include Arj::Persistence
+      include Arj::Extensions::Persistence
 
       def initialize(*args)
         proc = args[0].is_a?(Proc) ? args.shift : nil

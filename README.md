@@ -15,15 +15,17 @@ For more information on ActiveJob, see:
 ## Sections
 
 - [Setup](#setup)
+- [Worker](#worker)
 - [Querying](#querying)
 - [Persistence](#persistence)
-- [Worker](#worker)
 - [Extensions](#extensions)
-  * [LastError](#lasterror)
-  * [Shard](#shard)
-  * [Timeout](#timeout)
-  * [RetainDiscarded](#retaindiscarded)
-  * [Database ID](#database-id)
+  * [Query Extension](#query-extension)
+  * [Persistence Extension](#persistence-extension)
+  * [LastError Extension](#lasterror-extension)
+  * [Shard Extension](#shard-extension)
+  * [Timeout Extension](#timeout-extension)
+  * [RetainDiscarded Extension](#retaindiscarded-extension)
+  * [Database ID Extension](#database-id-extension)
 - [Testing](#testing)
 
 ## Setup
@@ -67,11 +69,15 @@ Create a record class:
 
 ```ruby
 class Job < ActiveRecord::Base
-  # By default, ActiveRecord will use the primary key for ordering when using methods like Job.first,
-  # Job.last, etc. This will not work well if the primary key is job_id (the default), since job_id is
-  # a UUID.
+  # Optionally, override implicit_order_column to ensure sensible ordering from methods
+  # like Job.first and Job.last. Not required if using an ID column.
   def self.implicit_order_column
     %w[id created_at enqueued_at].find { attribute_names.include?(_1) }
+  end
+
+  # Optionally add a method which maps record objects to job objects. Use like Job.all.map(&:to_arj).
+  def to_arj
+    Arj.from(self)
   end
 end
 ```
@@ -121,37 +127,7 @@ Arj.where(queue_name: 'foo') # Jobs in the foo queue
 ...
 ```
 
-Optionally, query methods can also be added to job classes:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::Query
-end
-
-SampleJob.all # All SampleJobs
-```
-
-`:all` can be overridden to provide custom querying:
-
-```ruby
-class SampleJobOne < ActiveJob::Base
-  include Arj
-end
-class SampleJobTwo < ActiveJob::Base
-  include Arj
-end
-
-class SampleJobs
-  include Arj::Extensions::Query
-
-  def self.all
-    Arj.where(job_class: [SampleJobOne, SampleJobTwo].map(&:name))
-  end
-end
-
-SampleJobs.where(priority: 0) # Jobs of type SampleJobOne or SampleJobTwo with a priority of 0
-```
+Optionally, query methods can be added to job classes. See the [Query Extesion](#query-extension).
 
 ## Persistence
 
@@ -166,21 +142,7 @@ Arj.destroy!(job)
 Arj.destroyed?(job)
 ```
 
-Optionally, these methods can be added to job classes:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Persistence
-end
-```
-
-Example usage:
-
-```ruby
-job = SampleJob.perform_later
-job.update!(queue_name: 'some queue')
-```
+Optionally, these methods can be added to job classes. See the [Persistence Extesion](#persistence-extension).
 
 ## Worker
 
@@ -204,7 +166,68 @@ Arj::Worker.new(description: 'Arj::Worker(foo)', source: -> { Arj.queue('foo').t
 
 ## Extensions
 
-### Shard
+### Query Extension
+
+Adds ActiveRecord-like query methods job classes.
+
+#### Setup
+
+Include the `Query` extension:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj
+  include Arj::Extensions::Query
+end
+```
+
+Note that `:all` can be overridden to provide custom querying:
+
+```ruby
+class SampleJobOne < ActiveJob::Base
+  include Arj
+end
+class SampleJobTwo < ActiveJob::Base
+  include Arj
+end
+
+class SampleJobs
+  include Arj::Extensions::Query
+
+  def self.all
+    Arj.where(job_class: [SampleJobOne, SampleJobTwo].map(&:name))
+  end
+end
+```
+
+#### Example Usage
+
+```
+SampleJob.all # All SampleJobs
+SampleJobs.where(priority: 0) # Jobs of type SampleJobOne or SampleJobTwo with a priority of 0
+```
+
+### Persistence Extension
+
+#### Setup
+
+Include the `Persistence` extension:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj
+  include Arj::Extensions::Persistence
+end
+```
+
+#### Example Usage
+
+```ruby
+job = SampleJob.perform_later
+job.update!(queue_name: 'some queue')
+```
+
+### Shard Extension
 
 Adds a +shard+ attribute to jobs.
 
@@ -235,7 +258,7 @@ end
 SampleJob.set(shard: 'some shard').perform_later('foo')
 ```
 
-### LastError
+### LastError Extension
 
 Adds a +last_error+ attribute to jobs which will contain the stacktrace of the last error encountered during execution.
 
@@ -279,7 +302,7 @@ job.perform_now
 puts job.last_error
 ```
 
-### Timeout
+### Timeout Extension
 
 Adds job timeouts.
 
@@ -333,7 +356,7 @@ class SampleJob < ActiveJob::Base
 end
 ```
 
-### RetainDiscarded
+### RetainDiscarded Extension
 
 Provides the ability to retain discarded jobs.
 
@@ -384,7 +407,7 @@ job.discarded_at
 Arj.discarded
 ```
 
-### Database ID
+### Database ID Extension
 
 To create the jobs table with an id column, use this alternative migration:
 

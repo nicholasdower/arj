@@ -10,4 +10,4 @@
 - Removed `id`, `created_at` and `updated_at` from default DB schema. ID is now optional.
 - LastError now truncates errors when pretty printing.
 - Add `RetainDiscarded` extension to allow retention of discarded jobs.
-- Moved `Query` into `Extensions` module.
+- Move `Query` and `Persistence` into `Extensions` module.
