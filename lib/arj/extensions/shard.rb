@@ -5,14 +5,19 @@ module Arj
     # Adds a +shard+ attribute to a job class.
     #
     # Example usage:
-    #   class AddShardToJobs < Arj::Migration[7.1]
+    #   class AddShardToJobs < ActiveRecord::Migration[7.1]
     #     def self.up
-    #       add_shard_extension
+    #       Arj::Extensions::Shard.migrate_up(self)
     #     end
     #
     #     def self.down
-    #       remove_shard_extension
+    #       Arj::Extensions::Shard.migrate_down(self)
     #     end
+    #   end
+    #
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj
+    #     include Arj::Extensions::Shard
     #   end
     #
     #   SampleJob.set(shard: 'some shard').perform_later
@@ -48,6 +53,24 @@ module Arj
         raise "#{Arj.record_class.name} data missing shard attribute" unless job_data.key?('shard')
 
         super.tap { @shard = job_data['shard'] }
+      end
+
+      # Adds a +shard+ column to the jobs table.
+      #
+      # @param migration [ActiveRecord::Migration]
+      # @param table_name [Symbol] defaults to +:jobs+
+      # @return [NilClass]
+      def self.migrate_up(migration, table_name: :jobs)
+        migration.add_column table_name, :shard, :string
+      end
+
+      # Removes the +shard+ column from the jobs table.
+      #
+      # @param migration [ActiveRecord::Migration]
+      # @param table_name [Symbol] defaults to +:jobs+
+      # @return [NilClass]
+      def self.migrate_down(migration, table_name: :jobs)
+        migration.remove_column table_name, :shard
       end
     end
   end

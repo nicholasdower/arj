@@ -30,9 +30,22 @@ class Job < ActiveRecord::Base
   end
 end
 
-class CreateJobs < Arj::Migration[7.1]
+class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
-    create_jobs_table
+    create_table :jobs, id: :string, primary_key: :job_id do |table|
+      table.string   :job_class,            null: false
+      table.string   :queue_name
+      table.integer  :priority
+      table.text     :arguments,            null: false
+      table.integer  :executions,           null: false
+      table.text     :exception_executions, null: false
+      table.string   :locale
+      table.string   :timezone
+      table.datetime :enqueued_at,          null: false
+      table.datetime :scheduled_at
+    end
+
+    add_index :jobs, %i[priority scheduled_at enqueued_at]
   end
 
   def self.down
@@ -40,43 +53,43 @@ class CreateJobs < Arj::Migration[7.1]
   end
 end
 
-class CreateJobsWithId < Arj::Migration[7.1]
+class AddIdToJobs < ActiveRecord::Migration[7.1]
   def self.up
-    create_jobs_table(extensions: [:id])
+    Arj::Extensions::Id.migrate_up(self)
   end
 
   def self.down
-    drop_table :jobs
+    Arj::Extensions::Id.migrate_down(self)
   end
 end
 
-class AddShardToJobs < Arj::Migration[7.1]
+class AddShardToJobs < ActiveRecord::Migration[7.1]
   def self.up
-    add_shard_extension
+    Arj::Extensions::Shard.migrate_up(self)
   end
 
   def self.down
-    remove_shard_extension
+    Arj::Extensions::Shard.migrate_down(self)
   end
 end
 
-class AddLastErrorToJobs < Arj::Migration[7.1]
+class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
   def self.up
-    add_last_error_extension
+    Arj::Extensions::LastError.migrate_up(self)
   end
 
   def self.down
-    remove_last_error_extension
+    Arj::Extensions::LastError.migrate_down(self)
   end
 end
 
-class AddRetainDiscardedToJobs < Arj::Migration[7.1]
+class AddRetainDiscardedToJobs < ActiveRecord::Migration[7.1]
   def self.up
-    add_retain_discarded_extension
+    Arj::Extensions::RetainDiscarded.migrate_up(self)
   end
 
   def self.down
-    remove_retain_discarded_extension
+    Arj::Extensions::RetainDiscarded.migrate_down(self)
   end
 end
 

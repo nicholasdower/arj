@@ -5,13 +5,13 @@ module Arj
     # Provides the ability to retain discarded jobs.
     #
     # Example usage:
-    #   class AddRetainDiscardedToJobs < Arj::Migration[7.1]
+    #   class AddRetainDiscardedToJobs < ActiveRecord::Migration[7.1]
     #     def self.up
-    #       add_retain_discarded_extension
+    #       Arj::Extensions::RetainDiscarded.migrate_up(self)
     #     end
     #
     #     def self.down
-    #       remove_retain_discarded_extension
+    #       Arj::Extensions::RetainDiscarded.migrate_down(self)
     #     end
     #   end
     #
@@ -107,6 +107,26 @@ module Arj
         raise "#{Arj.record_class.name} data missing discarded_at attribute" unless job_data.key?('discarded_at')
 
         super.tap { @discarded_at = job_data['discarded_at']&.utc }
+      end
+
+      # Adds a +discarded_at+ column to the jobs table.
+      #
+      # @param migration [ActiveRecord::Migration]
+      # @param table_name [Symbol] defaults to +:jobs+
+      # @return [NilClass]
+      def self.migrate_up(migration, table_name: :jobs)
+        migration.add_column table_name, :discarded_at, :datetime
+        migration.change_column table_name, :enqueued_at, :datetime
+      end
+
+      # Removes the +discarded_at+ column from the jobs table.
+      #
+      # @param migration [ActiveRecord::Migration]
+      # @param table_name [Symbol] defaults to +:jobs+
+      # @return [NilClass]
+      def self.migrate_down(migration, table_name: :jobs)
+        migration.remove_column table_name, :discarded_at
+        migration.change_column table_name, :enqueued_at, :datetime, null: false
       end
     end
   end

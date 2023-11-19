@@ -5,17 +5,18 @@ module Arj
     # Adds a +last_error+ attribute to a job class.
     #
     # Example usage:
-    #   class AddLastErrorToJobs < Arj::Migration[7.1]
+    #   class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
     #     def self.up
-    #       add_last_error_extension
+    #       Arj::Extensions::LastError.migrate_up(self)
     #     end
     #
     #     def self.down
-    #       remove_last_error_extension
+    #       Arj::Extensions::LastError.migrate_down(self)
     #     end
     #   end
     #
     #   class SampleJob < ActiveJob::Base
+    #     include Arj
     #     include Arj::Extensions::LastError
     #
     #     retry_on Exception
@@ -113,6 +114,24 @@ module Arj
         raise "#{Arj.record_class.name} data missing last_error attribute" unless job_data.key?('last_error')
 
         super.tap { self.last_error = job_data['last_error'] }
+      end
+
+      # Adds a +last_error+ column to the jobs table.
+      #
+      # @param migration [ActiveRecord::Migration]
+      # @param table_name [Symbol] defaults to +:jobs+
+      # @return [NilClass]
+      def self.migrate_up(migration, table_name: :jobs)
+        migration.add_column table_name, :last_error, :text
+      end
+
+      # Removes the +last_error+ column from the jobs table.
+      #
+      # @param migration [ActiveRecord::Migration]
+      # @param table_name [Symbol] defaults to +:jobs+
+      # @return [NilClass]
+      def self.migrate_down(migration, table_name: :jobs)
+        migration.remove_column table_name, :last_error
       end
     end
   end

@@ -26,7 +26,6 @@ For more information on ActiveJob, see:
   * [Timeout Extension](#timeout-extension)
   * [RetainDiscarded Extension](#retaindiscarded-extension)
 - [Testing](#testing)
-- [Migrations](#migrations)
 - [ActiveJob Cheatsheet](#activejob-cheatsheet)
   * [Creating Jobs](#creating-jobs)
   * [Enqueuing Jobs](#enqueuing-jobs)
@@ -40,14 +39,25 @@ Add the following to your Gemfile:
 gem 'arj', '~> 0.0'
 ```
 
-Apply a database migration (See [Migrations](#migrations) for alternatives):
+Apply a database migration:
 
 ```ruby
-require 'arj/migration'
-
-class CreateJobs < Arj::Migration[7.1]
+class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
-    create_jobs_table
+    create_table table_name, id: :string, primary_key: :job_id do |table|
+      table.string   :job_class,            null: false
+      table.string   :queue_name
+      table.integer  :priority
+      table.text     :arguments,            null: false
+      table.integer  :executions,           null: false
+      table.text     :exception_executions, null: false
+      table.string   :locale
+      table.string   :timezone
+      table.datetime :enqueued_at,          null: false
+      table.datetime :scheduled_at
+    end
+
+    add_index table_name, %i[priority scheduled_at enqueued_at]
   end
 
   def self.down
@@ -74,17 +84,21 @@ class Job < ActiveRecord::Base
 end
 ```
 
-Configure the queue adapter.
+If using Rails, configure the queue adapter via `Rails::Application`:
 
 ```ruby
 require 'arj'
 
-# If using Rails:
 class MyApplication < Rails::Application
   config.active_job.queue_adapter = :arj
 end
+```
 
-# If not using Rails:
+If not using Rails, configure the queue adapter via `ActiveJob::Base`:
+
+```ruby
+require 'arj'
+
 ActiveJob::Base.queue_adapter = :arj
 ```
 
@@ -111,7 +125,7 @@ Arj.todo                     # Executable jobs in order
 
 It also exposes ActiveRecord query methods:
 
-```
+```ruby
 Arj.count                    # Number of jobs
 Arj.all                      # All jobs
 Arj.last                     # Last job by database id
@@ -119,7 +133,7 @@ Arj.where(queue_name: 'foo') # Jobs in the foo queue
 ...
 ```
 
-Optionally, query methods can be added to job classes. See the [Query Extesion](#query-extension).
+Optionally, query methods can be added to job classes. See the [Query Extension](#query-extension).
 
 ## Persistence
 
@@ -160,181 +174,117 @@ Arj::Worker.new(description: 'Arj::Worker(foo)', source: -> { Arj.queue('foo').t
 
 ### Query Extension
 
-Adds ActiveRecord-like query methods job classes.
-
-#### Setup
-
-Include the `Query` extension:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::Query
-end
-```
-
-Note that `:all` can be overridden to provide custom querying:
-
-```ruby
-class SampleJobOne < ActiveJob::Base
-  include Arj
-end
-class SampleJobTwo < ActiveJob::Base
-  include Arj
-end
-
-class SampleJobs
-  include Arj::Extensions::Query
-
-  def self.all
-    Arj.where(job_class: [SampleJobOne, SampleJobTwo].map(&:name))
-  end
-end
-```
+A module which, when included, adds class methods used to query jobs.
 
 #### Example Usage
 
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::Query
+end
+
+SampleJob.set(queue_name: 'some queue').perform_later('some arg')
+job = job.where(queue_name: 'some queue').first
+job.perform_now
 ```
-SampleJob.all # All SampleJobs
-SampleJobs.where(priority: 0) # Jobs of type SampleJobOne or SampleJobTwo with a priority of 0
+
+Note that all query methods delegate to `.all`. This method can be overridden to create a
+customized query interface. For instance, to create a job group:
+
+```ruby
+class FooBarJob < ActiveJob::Base; end
+class FooBazJob < ActiveJob::Base; end
+
+module FooJobs
+  include Arj::Extensions::Query
+
+  def self.all
+    Arj.where(job_class: [FooBarJob, FooBazJob].map(&:name))
+  end
+end
+
+FooBarJob.perform_later
+FooBazJob.perform_later
+FooJobs.available.first # Returns the first available job of type FooBarJob or FooBazJob.
 ```
 
 ### Persistence Extension
 
-#### Setup
-
-Include the `Persistence` extension:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::Persistence
-end
-```
+ActiveRecord-style persistence methods (`save!`, `update!`, `exists?`, etc.), but for jobs.
 
 #### Example Usage
 
 ```ruby
-job = SampleJob.perform_later
-job.update!(queue_name: 'some queue')
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::Persistence
+end
+
+job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
+job.queue_name = 'other queue'
+job.save!
 ```
 
 ### Shard Extension
 
-Adds a +shard+ attribute to jobs.
+Adds a `shard` attribute to a job class.
 
-#### Setup
-
-First, apply a migration:
+#### Example Usage
 
 ```ruby
 class AddShardToJobs < ActiveRecord::Migration[7.1]
-  def change
-    add_column :jobs, :shard, :string
+  def self.up
+    Arj::Extensions::Shard.migrate_up(self)
+  end
+
+  def self.down
+    Arj::Extensions::Shard.migrate_down(self)
   end
 end
-```
-
-Next, include the `Shard` extension:
-
-```ruby
+  
 class SampleJob < ActiveJob::Base
   include Arj
   include Arj::Extensions::Shard
 end
-```
 
-#### Example Usage
-
-```ruby
-SampleJob.set(shard: 'some shard').perform_later('foo')
+SampleJob.set(shard: 'some shard').perform_later
 ```
 
 ### LastError Extension
 
-Adds a +last_error+ attribute to jobs which will contain the stacktrace of the last error encountered during execution.
-
-#### Setup
-
-First, apply a migration:
-
-```ruby
-class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
-  def change
-    add_column :jobs, :last_error, :text
-  end
-end
-```
-
-Next, include the `LastError` extension:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::LastError
-end
-```
+Adds a `last_error` attribute to a job class.
 
 #### Example Usage
 
 ```ruby
+class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    Arj::Extensions::LastError.migrate_up(self)
+  end
+
+  def self.down
+    Arj::Extensions::LastError.migrate_down(self)
+  end
+end
+
 class SampleJob < ActiveJob::Base
   include Arj
   include Arj::Extensions::LastError
 
   retry_on Exception
-
-  def perform
-    raise 'oh, hi'
-  end
 end
 
-job = SampleJob.perform_later
-job.perform_now
-puts job.last_error
+job = SampleJob.perform_now
+job.last_error
 ```
 
 ### Timeout Extension
 
-Adds job timeouts.
+Adds timeout support to a job class.
 
-#### Setup
-
-First, include the `Timeout` extension:
+Example Usage
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::Timeout
-
-  def perform
-    sleep 10
-  end
-end
-```
-
-Optionally, override the default timeout:
-
-```ruby
-Arj::Extensions::Timeout.default_timeout = 5.seconds
-```
-
-Optionally, override the default timeout for a job class:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::Timeout
-
-  timeout_after 5.seconds
-end
-```
-
-#### Example Usage
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
   include Arj::Extensions::Timeout
 
   timeout_after 1.second
@@ -342,9 +292,25 @@ class SampleJob < ActiveJob::Base
   def perform
     sleep 2
   end
+end
 
-  job = SampleJob.perform_later
-  job.perform_now
+job = SampleJob.perform_later
+job.perform_now
+```
+
+Optionally, the default timeout may be changed:
+
+```ruby
+Arj::Extensions::Timeout.default_timeout = 5.seconds
+```
+
+Optionally, the timeout can be customized for a job class:
+
+```ruby
+class SampleJob < ActiveJob::Base
+  include Arj::Extensions::Timeout
+
+  timeout_after 5.seconds
 end
 ```
 
@@ -352,43 +318,22 @@ end
 
 Provides the ability to retain discarded jobs.
 
-#### Setup
-
-First, apply a migration:
-
-```ruby
-class AddDiscardedAtToJobs < ActiveRecord::Migration[7.1]
-  def self.up
-    add_column :jobs, :discarded_at, :datetime
-    change_column :jobs, :enqueued_at, :datetime, null: true
-  end
-
-  def self.down
-    remove_column :jobs, :discarded_at
-    change_column :jobs, :enqueued_at, :datetime, null: false
-  end
-end
-```
-
-Next, include the `RetainDiscarded` extension:
-
-```ruby
-class SampleJob < ActiveJob::Base
-  include Arj
-  include Arj::Extensions::RetainDiscarded
-end
-```
-
 #### Example Usage
 
 ```ruby
+class AddRetainDiscardedToJobs < ActiveRecord::Migration[7.1]
+  def self.up
+    Arj::Extensions::RetainDiscarded.migrate_up(self)
+  end
+
+  def self.down
+    Arj::Extensions::RetainDiscarded.migrate_down(self)
+  end
+end
+
 class SampleJob < ActiveJob::Base
   include Arj
   include Arj::Extensions::RetainDiscarded
-
-  def perform
-    raise 'oh, hi'
-  end
 end
 
 job = SampleJob.perform_later
@@ -440,24 +385,6 @@ job = Arj::Test::JobWithRetainDiscarded.perform_later(StandardError, 'oh, hi')
 job.discarded?
 job.discarded_at
 ```
-
-## Migrations
-
-To create the jobs table with an `id` column as the primary key rather than `job_id`:
-
-```ruby
-class CreateJobsWithId < Arj::Migration[7.1]
-  def self.up
-    create_jobs_table(extensions: [:id])
-  end
-
-  def self.down
-    drop_table :jobs
-  end
-end
-```
-
-This will result in the `provider_job_id` job attribute being populated.
 
 ## ActiveJob Cheatsheet
 

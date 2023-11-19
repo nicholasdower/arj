@@ -77,21 +77,24 @@ describe Arj do
       let(:record_id) { 1 }
 
       before do
-        TestDb.migrate(CreateJobs, :down)
-        TestDb.migrate(CreateJobsWithId, :up)
-        Arj::Test::Job.perform_later
+        stub_const('Arj::IdJob', Class.new(ActiveJob::Base))
+        Arj::IdJob.include(Arj)
+        Arj::IdJob.include(Arj::Extensions::Id)
+        Job.destroy_all
+        TestDb.migrate(AddIdToJobs, :up)
+        Arj::IdJob.perform_later
       end
 
       after do
-        TestDb.migrate(CreateJobsWithId, :down)
-        TestDb.migrate(CreateJobs, :up)
+        Job.destroy_all
+        TestDb.migrate(AddIdToJobs, :down)
 
         # Clean up some left over ActiveRecord state that causes warnings.
         Job.aliases_by_attribute_name.delete('id')
       end
 
       context 'when job attributes have not been populated' do
-        let(:job) { Arj::Test::Job.new }
+        let(:job) { Arj::IdJob.new }
 
         it 'populates provider_job_id' do
           expect { subject }.to change { job.provider_job_id }.from(nil).to(record_id)

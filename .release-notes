@@ -11,4 +11,4 @@
 - LastError now truncates errors when pretty printing.
 - Add `RetainDiscarded` extension to allow retention of discarded jobs.
 - Move `Query` and `Persistence` into `Extensions` module.
-- Add `Arj::Migration`.
+- Provide migration methods on extensions.

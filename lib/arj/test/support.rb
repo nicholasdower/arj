@@ -159,17 +159,30 @@ module Arj
       end
     end
 
-    # A {Job} with a +shard+ attribute. See: {Arj::Extensions::Shard}.
+    # A {Job} with an +id+ attribute.
+    #
+    # @see Arj::Extensions::Id
+    class JobWithId < Arj::Test::Job
+      include Arj::Extensions::Id
+    end
+
+    # A {Job} with a +shard+ attribute.
+    #
+    # @see Arj::Extensions::Shard
     class JobWithShard < Arj::Test::Job
       include Arj::Extensions::Shard
     end
 
-    # A {Job} with a +last_error+ attribute. See: {Arj::Extensions::LastError}.
+    # A {Job} with a +last_error+ attribute.
+    #
+    # @see Arj::Extensions::LastError
     class JobWithLastError < Arj::Test::Job
       include Arj::Extensions::LastError
     end
 
-    # A {Job} with a timeout. See: {Arj::Extensions::Timeout}.
+    # A {Job} with a timeout.
+    #
+    # @see Arj::Extensions::Timeout
     class JobWithTimeout < Arj::Test::Job
       include Arj::Extensions::Timeout
 
@@ -178,7 +191,9 @@ module Arj
       timeout_after 1.second
     end
 
-    # A test {Job} which is retained when discarded. See: {Arj::Extensions::RetainDiscarded}.
+    # A test {Job} which is retained when discarded.
+    #
+    # @see Arj::Extensions::RetainDiscarded
     class JobWithRetainDiscarded < Arj::Test::Job
       include Arj::Extensions::RetainDiscarded
 

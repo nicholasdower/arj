@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative 'extensions/id'
 require_relative 'extensions/last_error'
 require_relative 'extensions/persistence'
 require_relative 'extensions/query'

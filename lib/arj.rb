@@ -217,7 +217,6 @@ module Arj
       record.attributes.fetch_values(*REQUIRED_RECORD_ATTRIBUTES)
       job_data = record.attributes
       job_data['arguments'] = JSON.parse(job_data['arguments'])
-      job_data['provider_job_id'] = job_data['id']
       job_data['exception_executions'] = JSON.parse(job_data['exception_executions'])
       job_data['enqueued_at'] = job_data['enqueued_at'].iso8601 if job_data['enqueued_at']
       job_data['scheduled_at'] = job_data['scheduled_at']&.iso8601 if job_data['scheduled_at']
