@@ -12,25 +12,6 @@ For more information on ActiveJob, see:
 - https://edgeguides.rubyonrails.org/active_job_basics.html
 - https://www.rubydoc.info/gems/activejob
 
-## Sections
-
-- [Basic Setup](#basic-setup)
-- [Worker](#worker)
-- [Querying](#querying)
-- [Persistence](#persistence)
-- [Extensions](#extensions)
-  * [Query Extension](#query-extension)
-  * [Persistence Extension](#persistence-extension)
-  * [LastError Extension](#lasterror-extension)
-  * [Shard Extension](#shard-extension)
-  * [Timeout Extension](#timeout-extension)
-  * [RetainDiscarded Extension](#retaindiscarded-extension)
-- [Testing](#testing)
-- [ActiveJob Cheatsheet](#activejob-cheatsheet)
-  * [Creating Jobs](#creating-jobs)
-  * [Enqueuing Jobs](#enqueuing-jobs)
-  * [Executing Jobs](#executing-jobs)
-
 ## Basic Setup
 
 Add the following to your Gemfile:
