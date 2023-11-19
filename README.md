@@ -191,7 +191,16 @@ FooJobs.available.first # Returns the first available job of type FooBarJob or F
 
 ### Persistence Extension
 
-ActiveRecord-style persistence methods (`save!`, `update!`, `exists?`, etc.), but for jobs.
+Provides ActiveRecord-like persistence methods for jobs:
+
+```ruby
+job.exists?
+job.reload
+job.save!
+job.update!
+job.destroy!
+job.destroyed?
+```
 
 #### Example Usage
 
