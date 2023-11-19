@@ -425,14 +425,11 @@ SampleJob                                      # All enqueued with options
 ### Executing Jobs
 
 ```ruby
-# Performed without enqueueing, enqueued on failure if retries configured
-job = SampleJob.new
+# Executed without enqueueing, enqueued on failure if retries configured
 SampleJob.new.perform_now
-SampleJob.new.execute
-ActiveJob::Base.exeucute(job.serialize)
+ActiveJob::Base.exeucute(SampleJob.new.serialize)
 
-# Performed after enqueueing
-job = SampleJob.perform_later
-job.perform_now
-ActiveJob::Base.exeucute(job.serialize)
+# Executed after enqueueing
+SampleJob.perform_later.perform_now
+ActiveJob::Base.exeucute(SampleJob.perform_later.serialize)
 ```
