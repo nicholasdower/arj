@@ -52,8 +52,8 @@ Create a record class:
 ```ruby
 class Job < ActiveRecord::Base
   def self.implicit_order_column
-    # Order by enqueued_at when using Job.last, Job.first, etc.
-    'enqueued_at'
+    # Order by id (if defined), or enqueued_at when using Job.last, Job.first, etc.
+    %w[id enqueued_at].find { attribute_names.include?(_1) }
   end
 
   def to_arj

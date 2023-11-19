@@ -85,6 +85,7 @@ module Arj
       @record_class = clazz
     end
 
+    # @param job [ActiveJob::Base]
     # @return [Boolean] +true+ if the specified job has a corresponding record in the database
     def exists?(job)
       Arj.record_class.exists?(job.job_id)
@@ -92,6 +93,7 @@ module Arj
 
     # Reloads the attributes of the specified job from the database.
     #
+    # @param job [ActiveJob::Base]
     # @return [ActiveJob::Base] the specified job, updated
     def reload(job)
       record = Arj.record_class.find(job.job_id)
@@ -113,6 +115,7 @@ module Arj
     #   job.queue_name = 'other queue'
     #   Arj.save!(job)
     #
+    # @param job [ActiveJob::Base]
     # @return [Boolean] +true+
     def save!(job)
       if (record = Arj.record_class.find_by(job_id: job.job_id))
@@ -132,6 +135,8 @@ module Arj
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   Arj.update!(job, queue_name: 'other queue')
     #
+    # @param job [ActiveJob::Base]
+    # @param attributes [Hash]
     # @return [Boolean] +true+
     def update!(job, attributes)
       raise "invalid attributes: #{attributes}" unless attributes.is_a?(Hash)
@@ -152,6 +157,7 @@ module Arj
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   Arj.destroy!(job)
     #
+    # @param job [ActiveJob::Base]
     # @return [ActiveJob::Base] the specified job
     def destroy!(job)
       record = Arj.record_class.find(job.job_id)
@@ -162,6 +168,7 @@ module Arj
       job
     end
 
+    # @param job [ActiveJob::Base]
     # @return [Boolean] +true+ if the specified job has been deleted from the database
     def destroyed?(job)
       !exists?(job)
@@ -169,6 +176,8 @@ module Arj
 
     # Returns a job object for the specified database record. If a job is specified, it is updated from the record.
     #
+    # @param record [ActiveRecord::Base]
+    # @param job [ActiveJob::Base]
     # @return [ActiveJob::Base]
     def from(record, job = nil)
       raise "expected #{Arj.record_class}, found #{record.class}" unless record.is_a?(Arj.record_class)

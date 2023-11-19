@@ -28,3 +28,5 @@ Figure out a way to run without including the Arj module.
 Tests for default ordering with last, first, etc.
 Check whether auto-increment is required when using MySQL
 Add tests for MySQL and Postgres
+Implement support for nested blocks in relation methods.
+Arj should not know about discarded_at.
