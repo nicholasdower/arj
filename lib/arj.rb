@@ -105,7 +105,9 @@ module Arj
     # Saves the database record associated with the specified job. Raises if the record is invalid.
     #
     # Example usage:
-    #   class SampleJob < ActiveJob::Base; end
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj
+    #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   job.queue_name = 'other queue'
@@ -123,7 +125,9 @@ module Arj
     # Updates the database record associated with the specified job. Raises if the record is invalid.
     #
     # Example usage:
-    #   class SampleJob < ActiveJob::Base; end
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj
+    #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   Arj.update!(job, queue_name: 'other queue')
@@ -141,7 +145,9 @@ module Arj
     # Destroys the database record associated with the specified job.
     #
     # Example usage:
-    #   class SampleJob < ActiveJob::Base; end
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj
+    #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   Arj.destroy!(job)

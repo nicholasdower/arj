@@ -13,6 +13,7 @@ module Arj
     #
     # Example usage
     #   class SampleJob < ActiveJob::Base
+    #     include Arj
     #     include Arj::Extensions::Persistence
     #   end
     #
@@ -23,7 +24,9 @@ module Arj
     # The {Arj} module provides the same methods but with a job argument.
     #
     # Example usage:
-    #   class SampleJob < ActiveJob::Base; end
+    #   class SampleJob < ActiveJob::Base
+    #     include Arj
+    #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   job.queue_name = 'other queue'

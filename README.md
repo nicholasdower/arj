@@ -50,9 +50,6 @@ end
 Create a record class:
 
 ```ruby
-require 'active_record/base'
-require 'arj'
-
 class Job < ActiveRecord::Base
   def self.implicit_order_column
     # Order by enqueued_at when using Job.last, Job.first, etc.
@@ -68,9 +65,8 @@ end
 If using Rails, configure the queue adapter via `Rails::Application`:
 
 ```ruby
-require 'arj'
-
 class MyApplication < Rails::Application
+  require 'arj'
   config.active_job.queue_adapter = :arj
 end
 ```
@@ -78,16 +74,12 @@ end
 If not using Rails, configure the queue adapter via `ActiveJob::Base`:
 
 ```ruby
-require 'arj'
-
 ActiveJob::Base.queue_adapter = :arj
 ```
 
 Include the `Arj` module in your job classes:
 
 ```ruby
-require 'arj'
-
 class SampleJob < ActiveJob::Base
   include Arj
 end
@@ -161,6 +153,7 @@ A module which, when included, adds class methods used to query jobs.
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj
   include Arj::Extensions::Query
 end
 
@@ -173,8 +166,13 @@ Note that all query methods delegate to `.all`. This method can be overridden to
 customized query interface. For instance, to create a job group:
 
 ```ruby
-class FooBarJob < ActiveJob::Base; end
-class FooBazJob < ActiveJob::Base; end
+class FooBarJob < ActiveJob::Base
+  include Arj
+end
+
+class FooBazJob < ActiveJob::Base
+  include Arj
+end
 
 module FooJobs
   include Arj::Extensions::Query
@@ -206,6 +204,7 @@ job.destroyed?
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj
   include Arj::Extensions::Persistence
 end
 
@@ -275,6 +274,7 @@ Example Usage
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj
   include Arj::Extensions::Timeout
 
   timeout_after 1.second
@@ -298,6 +298,7 @@ Optionally, the timeout can be customized for a job class:
 
 ```ruby
 class SampleJob < ActiveJob::Base
+  include Arj
   include Arj::Extensions::Timeout
 
   timeout_after 5.seconds
