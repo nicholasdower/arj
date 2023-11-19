@@ -379,6 +379,20 @@ job.discarded_at
 
 ## ActiveJob Cheatsheet
 
+### Configuring a Queue Adapter
+
+```ruby
+# With Rails
+class MyApplication < Rails::Application
+  config.active_job.queue_adapter = :foo           # Instantiates FooAdapter
+  config.active_job.queue_adapter = FooAdapter.new # Uses FooAdapter directly
+end
+
+# Without Rails
+ActiveJob::Base.queue_adapter = :foo           # Instantiates FooAdapter
+ActiveJob::Base.queue_adapter = FooAdapter.new # Uses FooAdapter directly
+```
+
 ### Creating Jobs
 
 ```ruby
@@ -426,10 +440,11 @@ SampleJob                                      # All enqueued with options
 
 ```ruby
 # Executed without enqueueing, enqueued on failure if retries configured
-SampleJob.new.perform_now
-ActiveJob::Base.exeucute(SampleJob.new.serialize)
+SampleJob.new(args).perform_now
+SampleJob.perform_now(args)
+ActiveJob::Base.exeucute(SampleJob.new(args).serialize)
 
 # Executed after enqueueing
-SampleJob.perform_later.perform_now
-ActiveJob::Base.exeucute(SampleJob.perform_later.serialize)
+SampleJob.perform_later(args).perform_now
+ActiveJob::Base.exeucute(SampleJob.perform_later(args).serialize)
 ```
