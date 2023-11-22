@@ -16,7 +16,7 @@ module Arj
     #   end
     #
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #     include Arj::Extensions::Id
     #   end
     #
@@ -34,7 +34,7 @@ module Arj
 
       # Adds an +id+ column to the jobs table.
       #
-      # @param migration [ActiveRecord::Migration]
+      # @param migration [Class<ActiveRecord::Migration>]
       # @param table_name [Symbol] defaults to +:jobs+
       # @return [NilClass]
       def self.migrate_up(migration, table_name: :jobs)
@@ -47,7 +47,7 @@ module Arj
 
       # Removes the +id+ column from the jobs table.
       #
-      # @param migration [ActiveRecord::Migration]
+      # @param migration [Class<ActiveRecord::Migration>]
       # @param table_name [Symbol] defaults to +:jobs+
       # @return [NilClass]
       def self.migrate_down(migration, table_name: :jobs)

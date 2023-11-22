@@ -61,7 +61,7 @@ describe Arj do
     end
   end
 
-  context '.from_record' do
+  context '.from' do
     subject { Arj.from(record, job) }
 
     let(:job) { Arj.sole }
@@ -265,26 +265,26 @@ describe Arj do
 
     context 'when record missing expected attributes' do
       before do
-        stub_const('AddEnqueuedAtToJobs', Class.new(ActiveRecord::Migration[7.1]))
-        AddEnqueuedAtToJobs.class_eval do
+        stub_const('AddScheduledAtToJobs', Class.new(ActiveRecord::Migration[7.1]))
+        AddScheduledAtToJobs.class_eval do
           def self.up
-            add_column :jobs, :enqueued_at, :datetime, null: false
+            add_column :jobs, :scheduled_at, :datetime
           end
 
           def self.down
-            remove_column :jobs, :enqueued_at
+            remove_column :jobs, :scheduled_at
           end
         end
       end
 
       after do
         Job.destroy_all
-        TestDb.migrate(AddEnqueuedAtToJobs, :up)
+        TestDb.migrate(AddScheduledAtToJobs, :up)
       end
 
       it 'raises' do
-        TestDb.migrate(AddEnqueuedAtToJobs, :down)
-        expect { subject }.to raise_error(KeyError, 'key not found: "enqueued_at"')
+        TestDb.migrate(AddScheduledAtToJobs, :down)
+        expect { subject }.to raise_error(KeyError, 'key not found: "scheduled_at"')
       end
     end
   end
@@ -301,6 +301,22 @@ describe Arj do
                                  ])
     end
 
+    context 'when locale explicitly set' do
+      before { job.locale = 'de' }
+
+      it 'returns the expected locale' do
+        expect(subject[:locale]).to eq('de')
+      end
+    end
+
+    context 'when locale not set' do
+      before { job.locale = nil }
+
+      it 'returns the default locale' do
+        expect(subject[:locale]).to eq('en')
+      end
+    end
+
     context 'when the job is missing a required attribute' do
       before do
         serialized = job.serialize
@@ -310,6 +326,36 @@ describe Arj do
 
       it 'raises' do
         expect { subject }.to raise_error(KeyError, 'key not found: "arguments"')
+      end
+    end
+  end
+
+  context '#method' do
+    subject { Arj.method(method_name) }
+
+    context 'when method exists on the record class' do
+      let(:method_name) { :first }
+
+      it 'returns the method' do
+        expect(subject).to be_a(Method)
+        expect(subject.name).to eq(method_name)
+      end
+    end
+
+    context 'when method exists on the Arj class' do
+      let(:method_name) { :to_s }
+
+      it 'returns the method' do
+        expect(subject).to be_a(Method)
+        expect(subject.name).to eq(method_name)
+      end
+    end
+
+    context 'when method does not exist' do
+      let(:method_name) { :foo }
+
+      it 'raises' do
+        expect { subject }.to raise_error(NameError, /undefined method `foo' for class `#<Class:Arj>'/)
       end
     end
   end

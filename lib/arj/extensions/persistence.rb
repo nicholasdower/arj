@@ -13,7 +13,7 @@ module Arj
     #
     # Example usage
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #     include Arj::Extensions::Persistence
     #   end
     #
@@ -25,30 +25,30 @@ module Arj
     #
     # Example usage:
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   job.queue_name = 'other queue'
-    #   Arj.save!(job)
+    #   Arj.save_job!(job)
     module Persistence
       # @return [Boolean] +true+ if this has a corresponding record in the database
       def exists?
-        Arj.exists?(self)
+        Arj.job_exists?(self)
       end
 
       # Reloads the attributes of this job from the database.
       #
       # @return [ActiveJob::Base] the specified job, updated
       def reload
-        Arj.reload(self)
+        Arj.reload_job(self)
       end
 
       # Saves the database record associated with this job. Raises if the record is invalid.
       #
       # @return [Boolean] +true+
       def save!
-        Arj.save!(self)
+        Arj.save_job!(self)
       end
 
       # Updates the database record associated with this job. Raises if the record is invalid.
@@ -56,19 +56,19 @@ module Arj
       # @param attributes [Hash]
       # @return [Boolean] +true+
       def update!(attributes)
-        Arj.update!(self, attributes)
+        Arj.update_job!(self, attributes)
       end
 
       # Destroys the database record associated with this job.
       #
       # @return [ActiveJob::Base] the specified job
       def destroy!
-        Arj.destroy!(self)
+        Arj.destroy_job!(self)
       end
 
       # @return [Boolean] +true+ if the this job has been deleted from the database
       def destroyed?
-        Arj.destroyed?(self)
+        Arj.job_destroyed?(self)
       end
     end
   end

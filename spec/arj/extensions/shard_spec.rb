@@ -28,7 +28,7 @@ describe Arj::Extensions::Shard do
       end
 
       context 'when shard is updated after creation' do
-        subject { Arj.update!(job, shard: 'other shard') }
+        subject { Arj.update_job!(job, shard: 'other shard') }
 
         let(:job) { Arj::ShardJob.set(shard: 'some shard').perform_later }
 

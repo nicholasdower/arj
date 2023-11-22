@@ -7,7 +7,7 @@ describe Arj::Extensions::LastError do
   before do
     stub_const('Arj::LastErrorJob', Class.new(ActiveJob::Base))
     Arj::LastErrorJob.class_eval do
-      include Arj
+      include Arj::Job
       include Arj::Extensions::LastError
       retry_on Exception
 
@@ -38,7 +38,7 @@ describe Arj::Extensions::LastError do
       end
 
       context 'when error is updated' do
-        subject { Arj.update!(job, last_error: error) }
+        subject { Arj.update_job!(job, last_error: error) }
 
         let!(:job) { Arj::LastErrorJob.perform_later }
         let(:error) do

@@ -6,14 +6,25 @@ describe Arj::Extensions::RetainDiscarded do
   before do
     stub_const('Arj::RetainDiscardedJob', Class.new(ActiveJob::Base))
     Arj::RetainDiscardedJob.class_eval do
-      include Arj
+      include Arj::Job
       include Arj::Extensions::RetainDiscarded
 
       def perform
         raise 'oh, hi'
       end
     end
+
+    stub_const('JobWithDiscarded', Class.new(ActiveRecord::Base))
+    JobWithDiscarded.class_eval do
+      self.table_name = 'jobs'
+
+      include Arj::Record
+      include Arj::Extensions::RetainDiscarded
+    end
+    Arj.record_class = JobWithDiscarded
   end
+
+  after { Arj.record_class = Job }
 
   context 'when discarded_at added to jobs table' do
     before { TestDb.migrate(AddRetainDiscardedToJobs, :up) }
@@ -27,7 +38,7 @@ describe Arj::Extensions::RetainDiscarded do
       let(:job) { Arj::RetainDiscardedJob.perform_later }
 
       context 'when discarded_at is updated' do
-        subject { Arj.update!(job, discarded_at: Time.now.utc) }
+        subject { Arj.update_job!(job, discarded_at: Time.now.utc) }
 
         it 'updates discarded_at in the database' do
           subject
@@ -70,7 +81,7 @@ describe Arj::Extensions::RetainDiscarded do
       end
     end
 
-    context '.discarded?' do
+    context '#discarded?' do
       subject { job.discarded? }
 
       let(:job) { Arj::RetainDiscardedJob.perform_later }
@@ -183,7 +194,7 @@ describe Arj::Extensions::RetainDiscarded do
       before do
         stub_const('Arj::DoNotRetainDiscardedJob', Class.new(ActiveJob::Base))
         Arj::DoNotRetainDiscardedJob.class_eval do
-          include Arj
+          include Arj::Job
           include Arj::Extensions::RetainDiscarded
 
           destroy_discarded
@@ -211,14 +222,74 @@ describe Arj::Extensions::RetainDiscarded do
         expect { subject rescue nil }.not_to change(Job, :count).from(1)
       end
     end
+
+    context 'Arj.discarded' do
+      subject { Arj.discarded.to_a }
+
+      context 'when no discarded jobs exist' do
+        before { Arj::Test::JobWithRetainDiscarded.new.perform_now }
+
+        it 'returns zero jobs' do
+          expect(subject.size).to eq(0)
+        end
+      end
+
+      context 'when discarded jobs exist' do
+        before do
+          Arj::Test::Job.perform_later
+          job = Arj::Test::JobWithRetainDiscarded.set(queue: 'some queue').perform_later(StandardError)
+          job.perform_now
+          job.perform_now rescue nil
+        end
+
+        it 'returns the failing jobs' do
+          expect(subject.map(&:queue_name).sort).to eq(['some queue'])
+        end
+      end
+    end
+
+    context 'Arj.executable' do
+      subject { Arj.executable.to_a }
+
+      context 'when no ready jobs exist' do
+        before { Arj::Test::Job.set(wait: 1.second).perform_later }
+
+        it 'returns zero jobs' do
+          expect(subject.size).to eq(0)
+        end
+      end
+
+      context 'when jobs without a scheduled_at exist' do
+        before do
+          Arj::Test::Job.set(queue: 'some queue').perform_later
+          Arj::Test::Job.set(wait: 1.second).perform_later
+        end
+
+        it 'returns the jobs' do
+          expect(subject.map(&:queue_name).sort).to eq(['some queue'])
+        end
+      end
+
+      context 'when jobs with a scheduled_at in the past exist' do
+        before do
+          Arj::Test::Job.set(queue: 'some queue', wait: 1.second).perform_later
+          Timecop.travel(1.second)
+          Arj::Test::Job.set(wait: 1.second).perform_later
+        end
+
+        it 'returns the jobs' do
+          expect(subject.map(&:queue_name).sort).to eq(['some queue'])
+        end
+      end
+    end
   end
 
-  context 'when shard not added to jobs table' do
+  context 'when discarded_at not added to jobs table' do
     context '#serialize' do
       subject { Arj::RetainDiscardedJob.perform_later.serialize }
 
       it 'raises' do
-        expect { subject }.to raise_error(StandardError, 'Job class missing discarded_at attribute')
+        expect { subject }.to raise_error(StandardError, 'JobWithDiscarded class missing discarded_at attribute')
       end
     end
 
@@ -226,8 +297,24 @@ describe Arj::Extensions::RetainDiscarded do
       subject { Arj::RetainDiscardedJob.new.deserialize({}) }
 
       it 'raises' do
-        expect { subject }.to raise_error(StandardError, 'Job data missing discarded_at attribute')
+        expect { subject }.to raise_error(StandardError, 'JobWithDiscarded data missing discarded_at attribute')
       end
+    end
+
+    context 'Arj.discarded' do
+      subject { Arj.discarded.to_a }
+
+      it 'raises' do
+        expect { subject }.to raise_error(ActiveRecord::StatementInvalid, /no such column: discarded_at/)
+      end
+    end
+  end
+
+  context 'when included in unexpected class' do
+    subject { String.include Arj::Extensions::RetainDiscarded }
+
+    it 'raises' do
+      expect { subject }.to raise_error(StandardError, 'expected ActiveRecord::Base or ActiveJob::Job, found String')
     end
   end
 end

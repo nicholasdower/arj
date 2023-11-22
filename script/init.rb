@@ -21,13 +21,8 @@ ActiveJob::Base.logger.level = level
 ActiveRecord::Migration.verbose = false unless level <= 1
 
 class Job < ActiveRecord::Base
-  def self.implicit_order_column
-    %w[id enqueued_at].find { attribute_names.include?(_1) }
-  end
-
-  def to_arj
-    Arj.from(self)
-  end
+  include Arj::Record
+  extend Arj::Documentation::ArjRecord
 end
 
 class CreateJobs < ActiveRecord::Migration[7.1]
@@ -45,7 +40,8 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.datetime :scheduled_at
     end
 
-    add_index :jobs, %i[priority scheduled_at enqueued_at]
+    add_index :jobs, %i[priority scheduled_at]
+    add_index :jobs, %i[enqueued_at]
   end
 
   def self.down

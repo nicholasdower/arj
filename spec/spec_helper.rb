@@ -4,6 +4,7 @@ require_relative 'support/coverage' if ENV['COVERAGE'] == '1'
 
 require 'awesome_print'
 require 'logger'
+require 'pry'
 require 'timecop'
 
 ENV['LEVEL'] ||= Logger::FATAL.to_s

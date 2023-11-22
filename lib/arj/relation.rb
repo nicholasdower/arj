@@ -6,22 +6,13 @@ require_relative '../arj/documentation/active_record_relation'
 
 module Arj
   # A wrapper for {https://www.rubydoc.info/github/rails/rails/ActiveRecord/Relation ActiveRecord::Relation} which
-  # returns jobs rather than records. Also provides additional, Arj-specific query methods like {#todo todo},
-  # {#failing failing}, {#queue queue}.
+  # returns jobs rather than records.
   #
   # Note that records will not be mapped to jobs if they are missing one or more attributes (for instance when using
   # {#select select}).
   #
   # See: {Arj::Extensions::Query}
   class Relation
-    # List of Arj-specific query methods.
-    #
-    # @return [Array<Symbol>]
-    QUERY_METHODS = %i[failing queue executable todo discarded].freeze
-
-    include Arj::Documentation::ActiveRecordRelation
-    include Arj::Documentation::Enumerable
-
     # Returns an Arj::Relation which wraps the specified ActiveRecord Relation, WhereChain, etc.
     def initialize(ar_relation)
       @ar_relation = ar_relation
@@ -30,6 +21,8 @@ module Arj
     # Delegates to the wrapped ActiveRecord relation and maps record objects to job objects.
     #
     # @param method [Symbol]
+    # @param args [Array]
+    # @param block [Proc]
     def method_missing(method, *args, &block)
       result = if block
                  @ar_relation.send(method, *args) do |*inner_args, &inner_block|
@@ -46,65 +39,7 @@ module Arj
     #
     # @return [Boolean]
     def respond_to_missing?(*several_variants)
-      @ar_relation.respond_to?(*several_variants)
-    end
-
-    # Returns a {Relation} scope for jobs which have been executed one or more times.
-    #
-    # @return [Arj::Relation]
-    def failing
-      where('executions > ?', 0)
-    end
-
-    # Returns a {Relation} scope for jobs where +discarded_at+ is not +null+.
-    #
-    # See: [Arj::Extensions::RetainDiscarded]
-    #
-    # @return [Arj::Relation]
-    def discarded
-      unless Arj.record_class.attribute_names.include?('discarded_at')
-        raise "#{Arj.record_class.name} class missing discarded_at attribute"
-      end
-
-      where('discarded_at is not null')
-    end
-
-    # Returns a {Relation} scope for jobs in the specified queue(s).
-    #
-    # @param queues [Array<String]
-    # @return [Arj::Relation]
-    def queue(*queues)
-      where(queue_name: queues)
-    end
-
-    # Returns a {Relation} scope for jobs with a +scheduled_at+ that is either +null+ or in the past.
-    #
-    # @return [Arj::Relation]
-    def executable
-      relation = where('scheduled_at is null or scheduled_at <= ?', Time.now.utc)
-      relation = relation.where('discarded_at is null') if Arj.record_class.attribute_names.include?('discarded_at')
-
-      relation
-    end
-
-    # Returns a {Relation} scope for {executable} jobs in order.
-    #
-    # Jobs are ordered by:
-    # - +priority+ (+null+ last)
-    # - +scheduled_at+ (+null+ last)
-    # - +enqueued_at+
-    #
-    # @return [Arj::Relation]
-    def todo
-      executable.order(
-        Arel.sql(
-          <<~SQL.squish
-            CASE WHEN priority IS NULL THEN 1 ELSE 0 END, priority,
-            CASE WHEN scheduled_at IS NULL THEN 1 ELSE 0 END, scheduled_at,
-            enqueued_at
-          SQL
-        )
-      )
+      @ar_relation.respond_to?(*several_variants) || super
     end
 
     # Updates each matching job with the specified attributes.

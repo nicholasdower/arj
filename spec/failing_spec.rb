@@ -163,7 +163,7 @@ describe 'failing' do
           let(:enqueue) do
             stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
             Arj::SampleJob.class_eval do
-              include Arj
+              include Arj::Job
               retry_on Exception, wait: 1.minute, attempts: 2
 
               def perform

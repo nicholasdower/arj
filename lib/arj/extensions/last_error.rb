@@ -16,7 +16,7 @@ module Arj
     #   end
     #
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #     include Arj::Extensions::LastError
     #
     #     retry_on Exception
@@ -118,7 +118,7 @@ module Arj
 
       # Adds a +last_error+ column to the jobs table.
       #
-      # @param migration [ActiveRecord::Migration]
+      # @param migration [Class<ActiveRecord::Migration>]
       # @param table_name [Symbol] defaults to +:jobs+
       # @return [NilClass]
       def self.migrate_up(migration, table_name: :jobs)
@@ -127,7 +127,7 @@ module Arj
 
       # Removes the +last_error+ column from the jobs table.
       #
-      # @param migration [ActiveRecord::Migration]
+      # @param migration [Class<ActiveRecord::Migration>]
       # @param table_name [Symbol] defaults to +:jobs+
       # @return [NilClass]
       def self.migrate_down(migration, table_name: :jobs)

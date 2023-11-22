@@ -4,7 +4,7 @@ shared_examples 'persistence methods' do |target_class|
   let(:description) { target_class == Arj ? "#{target_class}." : "#{target_class}#" }
 
   context "#{description}exists?" do
-    subject { target_class == Arj ? Arj.exists?(job) : job.exists? }
+    subject { target_class == Arj ? Arj.job_exists?(job) : job.exists? }
 
     let!(:job) { Arj::Test::Job.perform_later }
 
@@ -32,7 +32,7 @@ shared_examples 'persistence methods' do |target_class|
   end
 
   context "#{description}reload" do
-    subject { target_class == Arj ? Arj.reload(job) : job.reload }
+    subject { target_class == Arj ? Arj.reload_job(job) : job.reload }
 
     let!(:job) { Arj::Test::Job.perform_later }
 
@@ -54,7 +54,7 @@ shared_examples 'persistence methods' do |target_class|
   end
 
   context "#{description}save!" do
-    subject { target_class == Arj ? Arj.save!(job) : job.save! }
+    subject { target_class == Arj ? Arj.save_job!(job) : job.save! }
 
     let!(:job) { Arj::Test::Job.perform_later }
 
@@ -81,7 +81,7 @@ shared_examples 'persistence methods' do |target_class|
   end
 
   context "#{description}update!" do
-    subject { target_class == Arj ? Arj.update!(job, attributes) : job.update!(attributes) }
+    subject { target_class == Arj ? Arj.update_job!(job, attributes) : job.update!(attributes) }
 
     let!(:job) { Arj::Test::Job.perform_later }
     let(:attributes) { {} }
@@ -152,7 +152,7 @@ shared_examples 'persistence methods' do |target_class|
   end
 
   context "#{description}destroy!" do
-    subject { target_class == Arj ? Arj.destroy!(job) : job.destroy! }
+    subject { target_class == Arj ? Arj.destroy_job!(job) : job.destroy! }
 
     let!(:job) { Arj::Test::Job.perform_later }
 
@@ -176,7 +176,7 @@ shared_examples 'persistence methods' do |target_class|
   end
 
   context "#{description}destroyed?" do
-    subject { target_class == Arj ? Arj.destroyed?(job) : job.destroyed? }
+    subject { target_class == Arj ? Arj.job_destroyed?(job) : job.destroyed? }
 
     let!(:job) { Arj::Test::Job.perform_later }
 

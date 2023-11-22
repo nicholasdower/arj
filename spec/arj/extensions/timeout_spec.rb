@@ -11,7 +11,7 @@ describe Arj::Extensions::Timeout do
   before do
     stub_const('Arj::JobWithTimeout', Class.new(ActiveJob::Base))
     Arj::JobWithTimeout.class_eval do
-      include Arj
+      include Arj::Job
       include Arj::Extensions::Timeout
 
       def perform; end

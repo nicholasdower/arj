@@ -84,7 +84,7 @@ describe 'performing' do
       before do
         stub_const('Arj::SampleJob', Class.new(ActiveJob::Base))
         Arj::SampleJob.class_eval do
-          include Arj
+          include Arj::Job
 
           def perform
             enqueue

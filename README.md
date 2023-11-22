@@ -25,7 +25,7 @@ Apply a database migration:
 ```ruby
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
-    create_table table_name, id: :string, primary_key: :job_id do |table|
+    create_table :jobs, id: :string, primary_key: :job_id do |table|
       table.string   :job_class,            null: false
       table.string   :queue_name
       table.integer  :priority
@@ -38,7 +38,8 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.datetime :scheduled_at
     end
 
-    add_index table_name, %i[priority scheduled_at enqueued_at]
+    add_index :jobs, %i[priority scheduled_at]
+    add_index :jobs, :enqueued_at
   end
 
   def self.down
@@ -51,14 +52,7 @@ Create a record class:
 
 ```ruby
 class Job < ActiveRecord::Base
-  def self.implicit_order_column
-    # Order by id (if defined), or enqueued_at when using Job.last, Job.first, etc.
-    %w[id enqueued_at].find { attribute_names.include?(_1) }
-  end
-
-  def to_arj
-    Arj.from(self)
-  end
+  include Arj::Record
 end
 ```
 
@@ -81,29 +75,28 @@ Include the `Arj` module in your job classes:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
 end
 ```
 
 ## Querying
 
-The `Arj` module exposes query methods which can be used to find jobs:
-
-```ruby
-Arj.queue('foo')             # Jobs in the foo queue
-Arj.failing                  # Failing jobs
-Arj.executable               # Executable jobs
-Arj.todo                     # Executable jobs in order
-```
-
-It also exposes ActiveRecord query methods:
+The `Arj` module proxies method calls to the ActiveRecord class and maps record objects to job objects:
 
 ```ruby
 Arj.count                    # Number of jobs
 Arj.all                      # All jobs
 Arj.last                     # Last job by database id
 Arj.where(queue_name: 'foo') # Jobs in the foo queue
-...
+```
+
+The `Arj::Record` module adds Arj-specific query methods:
+
+```ruby
+Arj.queue('foo')             # Jobs in the foo queue
+Arj.failing                  # Failing jobs
+Arj.executable               # Executable jobs
+Arj.todo                     # Executable jobs in order
 ```
 
 Optionally, query methods can be added to job classes. See the [Query Extension](#query-extension).
@@ -113,15 +106,15 @@ Optionally, query methods can be added to job classes. See the [Query Extension]
 The `Arj` module exposes ActiveRecord-like persistence methods. For example:
 
 ```ruby
-Arj.exists?(job)
-Arj.reload(job)
-Arj.save!(job)
-Arj.update!(job, attributes)
-Arj.destroy!(job)
-Arj.destroyed?(job)
+Arj.job_exists?(job)
+Arj.reload_job(job)
+Arj.save_job!(job)
+Arj.update_job!(job, attributes)
+Arj.destroy_job!(job)
+Arj.job_destroyed?(job)
 ```
 
-Optionally, these methods can be added to job classes. See the [Persistence Extesion](#persistence-extension).
+Optionally, persistence methods can be added to job classes. See the [Persistence Extesion](#persistence-extension).
 
 ## Worker
 
@@ -153,7 +146,7 @@ A module which, when included, adds class methods used to query jobs.
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::Query
 end
 
@@ -167,11 +160,11 @@ customized query interface. For instance, to create a job group:
 
 ```ruby
 class FooBarJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
 end
 
 class FooBazJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
 end
 
 module FooJobs
@@ -204,7 +197,7 @@ job.destroyed?
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::Persistence
 end
 
@@ -231,7 +224,7 @@ class AddShardToJobs < ActiveRecord::Migration[7.1]
 end
   
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::Shard
 end
 
@@ -256,7 +249,7 @@ class AddLastErrorToJobs < ActiveRecord::Migration[7.1]
 end
 
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::LastError
 
   retry_on Exception
@@ -274,7 +267,7 @@ Example Usage
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::Timeout
 
   timeout_after 1.second
@@ -298,7 +291,7 @@ Optionally, the timeout can be customized for a job class:
 
 ```ruby
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::Timeout
 
   timeout_after 5.seconds
@@ -323,7 +316,7 @@ class AddRetainDiscardedToJobs < ActiveRecord::Migration[7.1]
 end
 
 class SampleJob < ActiveJob::Base
-  include Arj
+  include Arj::Job
   include Arj::Extensions::RetainDiscarded
 end
 

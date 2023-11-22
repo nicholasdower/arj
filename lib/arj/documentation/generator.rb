@@ -15,10 +15,10 @@ module Arj
           '%<class>s#%<method>s}'
         )
         Generator.generate(
-          'lib/arj/documentation/arj_relation.rb',
-          Arj::Documentation::ArjRelation.name,
-          Arj::Relation,
-          Arj::Relation::QUERY_METHODS,
+          'lib/arj/documentation/arj_record.rb',
+          Arj::Documentation::ArjRecord.name,
+          Arj::Record::ClassMethods,
+          %i[executable failing queue todo],
           'See: {%<class>s#%<method>s}'
         )
         enumerable_methods = ::Enumerable.public_instance_methods.select do |m|

@@ -2,7 +2,6 @@
 
 require_relative '../../arj'
 require_relative '../documentation/active_record_relation'
-require_relative '../documentation/arj_relation'
 require_relative '../relation'
 
 module Arj
@@ -11,7 +10,7 @@ module Arj
     #
     # Example usage:
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #     include Arj::Extensions::Query
     #   end
     #
@@ -22,7 +21,7 @@ module Arj
     # This module is also included in the {Arj} module:
     #
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   SampleJob.set(queue_name: 'some queue').perform_later('some arg')
@@ -32,11 +31,11 @@ module Arj
     # Note that all query methods delegate to {Query::ClassMethods.all}. This method can be overridden to create a
     # customized query interface. For instance, to create a job group:
     #   class FooBarJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   class FooBazJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   module FooJobs
@@ -56,10 +55,27 @@ module Arj
       # Class methods which are automatically added when {Query} is included in a class.
       module ClassMethods
         include Arj::Documentation::ActiveRecordRelation
-        delegate(*ActiveRecord::Querying::QUERYING_METHODS, to: :all)
 
-        include Arj::Documentation::ArjRelation
-        delegate(*Arj::Relation::QUERY_METHODS, to: :all)
+        # Delegates to the +ActiveRecord::Base+ class returned by {Arj.record_class Arj.record_class}.
+        #
+        # @param method [Symbol]
+        # @param args [Array]
+        # @param block [Proc]
+        def method_missing(method, *args, &block)
+          if method == :select
+            # :select is also defined on Kernel. Using send will invoke the wrong method.
+            all.select(method, *args, &block)
+          else
+            all.send(method, *args, &block)
+          end
+        end
+
+        # Implemented to ensure +#method+ can be used to retrieve methods provided by ActiveRecord relations.
+        #
+        # @return [Boolean]
+        def respond_to_missing?(*args)
+          all.respond_to?(*args) || super
+        end
 
         # Returns a {Relation} scope object for all jobs.
         #

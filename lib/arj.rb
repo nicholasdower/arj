@@ -4,8 +4,8 @@ require 'active_record'
 require_relative 'arj/arj_adapter'
 require_relative 'arj/documentation'
 require_relative 'arj/extensions'
-require_relative 'arj/extensions/persistence'
-require_relative 'arj/extensions/query'
+require_relative 'arj/job'
+require_relative 'arj/record'
 require_relative 'arj/relation'
 require_relative 'arj/version'
 require_relative 'arj/worker'
@@ -16,7 +16,7 @@ require_relative 'arj/worker'
 #
 # The Arj module provides:
 # - Access to the global Arj setting {record_class}.
-# - Job query methods. See: {Arj::Extensions::Query}.
+# - Job query methods via {Arj::Extensions::Query}.
 # - Job persistence methods similar to {Arj::Extensions::Persistence}.
 module Arj
   REQUIRED_JOB_ATTRIBUTES = %w[
@@ -36,38 +36,12 @@ module Arj
 
   @record_class = DEFAULT_RECORD_CLASS
 
-  extend Arj::Extensions::Query::ClassMethods
-
-  # Registers job callbacks required
-  #
-  # @param clazz [Class]
-  # @return [Class]
-  def self.included(clazz)
-    clazz.before_perform do |job|
-      # Setting successfully_enqueued to false in order to detect when a job is re-enqueued during perform.
-      job.successfully_enqueued = false
-    end
-
-    clazz.after_perform do |job|
-      unless job.successfully_enqueued?
-        job.scheduled_at = nil
-        job.enqueued_at = nil
-        Arj.record_class.find_by(job_id: job.job_id)&.destroy!
-      end
-    end
-
-    clazz.after_discard do |job, _exception|
-      job.scheduled_at = nil
-      job.enqueued_at = nil
-      if job.class.respond_to?(:on_discard)
-        job.class.on_discard(job)
-      else
-        Arj.record_class.find_by(job_id: job.job_id)&.destroy!
-      end
-    end
-  end
+  include Arj::Extensions::Query
 
   class << self
+    include Arj::Documentation::ActiveRecordRelation
+    include Arj::Documentation::ArjRecord
+
     # The Class used to interact with jobs in the database. Defaults to +Job+.
     #
     # Note that if set to a String, will be lazily constantized.
@@ -87,7 +61,7 @@ module Arj
 
     # @param job [ActiveJob::Base]
     # @return [Boolean] +true+ if the specified job has a corresponding record in the database
-    def exists?(job)
+    def job_exists?(job)
       Arj.record_class.exists?(job.job_id)
     end
 
@@ -95,7 +69,7 @@ module Arj
     #
     # @param job [ActiveJob::Base]
     # @return [ActiveJob::Base] the specified job, updated
-    def reload(job)
+    def reload_job(job)
       record = Arj.record_class.find(job.job_id)
       Arj.from(record, job)
       job
@@ -108,16 +82,16 @@ module Arj
     #
     # Example usage:
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
     #   job.queue_name = 'other queue'
-    #   Arj.save!(job)
+    #   Arj.save_job!(job)
     #
     # @param job [ActiveJob::Base]
     # @return [Boolean] +true+
-    def save!(job)
+    def save_job!(job)
       if (record = Arj.record_class.find_by(job_id: job.job_id))
         record.update!(record_attributes(job)).tap { Arj.from(record, job) }
       else
@@ -129,16 +103,16 @@ module Arj
     #
     # Example usage:
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
-    #   Arj.update!(job, queue_name: 'other queue')
+    #   Arj.update_job!(job, queue_name: 'other queue')
     #
     # @param job [ActiveJob::Base]
     # @param attributes [Hash]
     # @return [Boolean] +true+
-    def update!(job, attributes)
+    def update_job!(job, attributes)
       raise "invalid attributes: #{attributes}" unless attributes.is_a?(Hash)
 
       job_id = job.job_id
@@ -151,15 +125,15 @@ module Arj
     #
     # Example usage:
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #   end
     #
     #   job = SampleJob.set(queue_name: 'some queue').perform_later('some arg')
-    #   Arj.destroy!(job)
+    #   Arj.destroy_job!(job)
     #
     # @param job [ActiveJob::Base]
     # @return [ActiveJob::Base] the specified job
-    def destroy!(job)
+    def destroy_job!(job)
       record = Arj.record_class.find(job.job_id)
       record.destroy!
       job.successfully_enqueued = false
@@ -170,8 +144,8 @@ module Arj
 
     # @param job [ActiveJob::Base]
     # @return [Boolean] +true+ if the specified job has been deleted from the database
-    def destroyed?(job)
-      !exists?(job)
+    def job_destroyed?(job)
+      !job_exists?(job)
     end
 
     # Returns a job object for the specified database record. If a job is specified, it is updated from the record.
@@ -253,7 +227,7 @@ module Arj
       serialized['enqueued_at'] = job.enqueued_at&.utc
 
       # ActiveJob::Base#serialize always returns I18n.locale.to_s for locale.
-      serialized['locale'] = job.locale
+      serialized['locale'] = job.locale || serialized['locale']
 
       serialized.symbolize_keys
     end

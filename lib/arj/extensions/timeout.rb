@@ -8,7 +8,7 @@ module Arj
     #
     # Example usage:
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #     include Arj::Extensions::Timeout
     #
     #     timeout_after 1.second
@@ -28,7 +28,7 @@ module Arj
     # Optionally, the timeout can be customized for a job class:
     #
     #   class SampleJob < ActiveJob::Base
-    #     include Arj
+    #     include Arj::Job
     #     include Arj::Extensions::Timeout
     #
     #     timeout_after 5.seconds

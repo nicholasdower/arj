@@ -13,30 +13,32 @@ describe Arj::Documentation::Generator do
         require 'foo'
 
         module Arj
-          module SampleModule
-            # @!method discarded
-            #   See: {Arj::Relation#discarded}
-            # @!method executable
-            #   See: {Arj::Relation#executable}
-            # @!method failing
-            #   See: {Arj::Relation#failing}
-            # @!method queue
-            #   See: {Arj::Relation#queue}
-            # @!method todo
-            #   See: {Arj::Relation#todo}
+          module SampleDoc
+            # @!method bar
+            #   See: {Arj::SampleModule#bar}
+            # @!method foo
+            #   See: {Arj::SampleModule#foo}
           end
         end
       RUBY
     end
     let(:file) do
-      tmp = Tempfile.new('sample_module.rb')
+      tmp = Tempfile.new('sample_doc.rb')
       tmp.write(original_file_content)
       tmp.rewind
       tmp
     end
-    let(:module_name) { 'Arj::SampleModule' }
-    let(:source) { Arj::Relation }
-    let(:methods) { Arj::Relation::QUERY_METHODS }
+    let(:module_name) { 'Arj::SampleDoc' }
+    let(:source) do
+      stub_const('Arj::SampleModule', Class.new)
+      Arj::SampleModule.class_eval do
+        def foo; end
+
+        def bar; end
+      end
+      Arj::SampleModule
+    end
+    let(:methods) { %i[foo bar] }
     let(:format_string) { 'See: {%<class>s#%<method>s}' }
 
     after do
@@ -52,22 +54,16 @@ describe Arj::Documentation::Generator do
     end
 
     context 'when content is not up to date' do
-      let(:methods) { Arj::Relation::QUERY_METHODS - [:todo] }
+      let(:methods) { [:foo] }
 
       let(:expected_file_content) do
         <<~RUBY
           require 'foo'
 
           module Arj
-            module SampleModule
-              # @!method discarded
-              #   See: {Arj::Relation#discarded}
-              # @!method executable
-              #   See: {Arj::Relation#executable}
-              # @!method failing
-              #   See: {Arj::Relation#failing}
-              # @!method queue
-              #   See: {Arj::Relation#queue}
+            module SampleDoc
+              # @!method foo
+              #   See: {Arj::SampleModule#foo}
             end
           end
         RUBY
@@ -80,7 +76,7 @@ describe Arj::Documentation::Generator do
     end
 
     context 'when source does not define method' do
-      let(:methods) { Arj::Relation::QUERY_METHODS + [:some_method] }
+      let(:methods) { %i[foo bar some_method] }
 
       it 'raises' do
         expect { subject }.to raise_error(StandardError, 'undocumented methods: [:some_method]')
@@ -93,7 +89,7 @@ describe Arj::Documentation::Generator do
 
     context 'when content is up to date' do
       it 'does not change arj_relation.rb' do
-        expect { subject }.not_to(change { File.read('lib/arj/documentation/arj_relation.rb') })
+        expect { subject }.not_to(change { File.read('lib/arj/documentation/arj_record.rb') })
       end
 
       it 'does not change active_record_relation.rb' do

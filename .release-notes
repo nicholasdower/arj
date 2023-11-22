@@ -1,14 +1,15 @@
 - Lower Ruby version requirement from `3.2.2` to `2.7.0`.
-- Add `Arj::QueryDocumentation` to provide documentation and autocomplete for `ActiveRecord::Relation` query methods.
+- Add `Arj::Documentation` to provide documentation and autocomplete for proxied methods.
 - Add support for queries like `Arj.select(:job_class)`. `Arj::Relation` now returns records in this case.
 - Add `Arj::Extensions::Timeout`.
-- Remove `Arj::Job`. Customization is now achieved via `ActiveJob` calbacks.
+- Job customization is now achieved via `ActiveJob` calbacks rather than overriding methods.
 - Fix bug causing jobs to be discarded when an error occurrs on re-enqueue.
 - Fix `Enumerable` support in `ArjRelation`. Add documentation.
 - Add Arj-specific query methods: `todo`, `failing`, `executable`, `queue`.
 - Allow jobs to enqueue / re-enqueue themselves while executing.
-- Removed `id`, `created_at` and `updated_at` from default DB schema. ID is now optional.
+- Removed `id`, `created_at` and `updated_at` from default DB schema. ID is now an extension.
 - LastError now truncates errors when pretty printing.
 - Add `RetainDiscarded` extension to allow retention of discarded jobs.
 - Move `Query` and `Persistence` into `Extensions` module.
 - Provide migration methods on extensions.
+- Move Arj query methods to record class.
