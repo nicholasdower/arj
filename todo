@@ -37,3 +37,4 @@ Make including extensions use a method rather than naming each module.
 Why does the console print already initialized? What are we loading twice?
 Handle worker interrupts
 Allow switching from mysql to sqlite during tests/console
+Dependabot

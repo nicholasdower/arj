@@ -16,12 +16,13 @@ help:
 	@echo '  install:               Run bundle install'
 	@echo '  console:               Start an interactive console'
 	@echo '  console-mysql:         Start an interactive console using MySQL'
+	@echo '  console-postgres:      Start an interactive console using Postgres'
 	@echo '  rubocop:               Run rubocop'
 	@echo '  rubocop-fix:           Run rubocop and fix auto-correctable offenses'
 	@echo '  rspec:                 Run all specs'
 	@echo '  rspec-mysql:           Run all specs using MySQL'
 	@echo '  coverage:              Run all specs with coverage'
-	@echo '  precommit:             Run lint and specs'
+	@echo '  precommit:             Run lint and specs on SQLite, MySQL and PostgreSQL'
 	@echo '  watch:                 Run lint and specs on file change'
 	@echo '  doc:                   Generate documentation'
 	@echo '  open-doc:              Open documentation'
@@ -30,6 +31,8 @@ help:
 	@echo '  gem:                   Build a gem'
 	@echo '  mysql-server:          Start MySQL'
 	@echo '  mysql-client:          Start a MySQL client'
+	@echo '  postgres-server:       Start Postgres'
+	@echo '  postgres-client:       Start a Postgres client'
 
 .install: Gemfile Gemfile.lock arj.gemspec
 	@make install
@@ -72,9 +75,16 @@ rubocop-fix: .install
 	@rubocop -A
 
 .PHONY: precommit
-precommit: .install
-	@COVERAGE=1 rspec --format progress
+precommit: .install mysql-server-healthy postgres-server-healthy
+	@echo MySQL
+	@DB=mysql rspec --format progress
+	@echo PostgreSQL
+	@DB=postgres rspec --format progress
+	@echo SQLite
+	@DB=sqlite COVERAGE=1 rspec --format progress
+	@echo Rubocop
 	@rubocop
+	@echo Yard
 	@yard
 
 .PHONY: watch
@@ -111,10 +121,10 @@ gem: clean-gems .install
 
 .PHONY: mysql-logs
 mysql-logs:
-	mkdir -p logs
-	touch logs/mysql-error.log
-	touch logs/mysql-general.log
-	chmod 666 logs/mysql-*.log
+	@mkdir -p logs
+	@touch logs/mysql-error.log
+	@touch logs/mysql-general.log
+	@chmod 666 logs/mysql-*.log
 
 .PHONY: mysql-server
 mysql-server:
@@ -124,7 +134,7 @@ mysql-server:
 
 .PHONY: mysql-server-healthy
 mysql-server-healthy: mysql-logs
-	./script/mysql-healthy.sh
+	@./script/docker-container-healthy arj_mysql
 
 .PHONY: mysql-client
 mysql-client:
@@ -133,6 +143,23 @@ mysql-client:
 .PHONY: rspec-mysql
 rspec-mysql: .install mysql-server-healthy
 	@DB=mysql rspec
+
+.PHONY: postgres-server
+postgres-server:
+	docker compose down
+	docker-compose up -d arj_postgres_healthy
+
+.PHONY: postgres-server-healthy
+postgres-server-healthy: 
+	@./script/docker-container-healthy arj_postgres
+
+.PHONY: postgres-client
+postgres-client:
+	PGPASSWORD=root psql -h 127.0.0.1 --username root --dbname arj
+
+.PHONY: rspec-postgres
+rspec-postgres: .install postgres-server-healthy
+	@DB=postgres rspec
 
 .PHONY: remvove-containers
 remove-containers:

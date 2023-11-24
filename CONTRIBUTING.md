@@ -15,9 +15,12 @@ Arj. An ActiveJob queuing backend which uses ActiveRecord.
 Targets:
   install:               Run bundle install
   console:               Start an interactive console
+  console-mysql:         Start an interactive console using MySQL
+  console-postgres:      Start an interactive console using Postgres
   rubocop:               Run rubocop
   rubocop-fix:           Run rubocop and fix auto-correctable offenses
   rspec:                 Run all specs
+  rspec-mysql:           Run all specs using MySQL
   coverage:              Run all specs with coverage
   precommit:             Run lint and specs
   watch:                 Run lint and specs on file change
@@ -27,9 +30,9 @@ Targets:
   clean:                 Remove *.gem, .yardoc/, doc/, logs/
   gem:                   Build a gem
   mysql-server:          Start MySQL
-  mysql-server-detached: Start MySQL in the background
   mysql-client:          Start a MySQL client
-  stop:                  Stop MySQL
+  postgres-server:       Start Postgres
+  postgres-client:       Start a Postgres client
 ```
 
 ## Logs
@@ -50,8 +53,20 @@ LEVEL=0 make console
 
 By default, SQLite is used when running tests or in the Arj console.
 
-To use MySQL:
+To use MySQL, [install Docker](https://docs.docker.com/get-docker), then:
 
-1. Install Docker: https://docs.docker.com/get-docker
-2. Run specs: `make rspec-mysql`
-3. Start a console: `make console-mysql`
+- Run specs: `make rspec-mysql`
+- Start a console: `make console-mysql`
+- Start the server: `make mysql-server`
+- Start a client: `make mysql-client`
+
+## Using PostgreSQL
+
+By default, SQLite is used when running tests or in the Arj console.
+
+To use PostgreSQL, [install Docker](https://docs.docker.com/get-docker), then:
+
+- Run specs: `make rspec-postgres`
+- Start a console: `make console-postgres`
+- Start the server: `make postgres-server`
+- Start a client: `make postgres-client`

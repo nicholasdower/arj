@@ -19,7 +19,7 @@ jobs:
   build-lint-test-2-7-0-sqlite:
     name: Build, Lint & Test (2.7.0, SQLite)
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -32,7 +32,7 @@ jobs:
   build-lint-test-3-2-2-sqlite:
     name: Build, Lint & Test (3.2.2, SQLite)
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -45,7 +45,7 @@ jobs:
   test-3-2-2-mysql:
     name: Test (3.2.2, MySQL)
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -53,3 +53,14 @@ jobs:
           ruby-version: '3.2.2'
       - name: Test
         run: make rspec-mysql
+  test-3-2-2-postgres:
+    name: Test (3.2.2, PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2.2'
+      - name: Test
+        run: make rspec-postgres

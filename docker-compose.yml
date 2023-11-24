@@ -21,7 +21,28 @@ services:
   arj_mysql_healthy:
     container_name: arj_mysql_healthy
     command: 'true'
-    image: alpine
+    image: busybox
     depends_on:
       arj_mysql:
+        condition: service_healthy
+  arj_postgres:
+    container_name: arj_postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: arj
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host", "localhost", "--username", "root", "--dbname", "arj", "--timeout", "5"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+  arj_postgres_healthy:
+    container_name: arj_postgres_healthy
+    image: busybox
+    depends_on:
+      arj_postgres:
         condition: service_healthy

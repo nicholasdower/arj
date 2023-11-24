@@ -13,9 +13,9 @@ ActiveJob::Base.queue_adapter = :arj
 Time.zone = 'UTC'
 
 level = Integer(ENV.fetch('LEVEL', Logger::INFO))
-ActiveRecord::Base.logger ||= Logger.new(STDOUT, level: level)
+ActiveRecord::Base.logger ||= Logger.new($stdout, level: level)
 ActiveRecord::Base.logger.level = level
-ActiveJob::Base.logger ||= Logger.new(STDOUT)
+ActiveJob::Base.logger ||= Logger.new($stdout)
 ActiveJob::Base.logger.level = level
 ActiveRecord::Migration.verbose = false unless level <= 1
 
@@ -27,7 +27,7 @@ end
 class CreateJobs < ActiveRecord::Migration[7.1]
   def self.up
     create_table :jobs, id: :string, primary_key: :job_id do |table|
-      table.string   :job_class,            null: false
+      table.string   :job_class, null: false
       table.string   :queue_name
       table.integer  :priority
       table.text     :arguments,            null: false
@@ -35,7 +35,7 @@ class CreateJobs < ActiveRecord::Migration[7.1]
       table.text     :exception_executions, null: false
       table.string   :locale
       table.string   :timezone
-      table.datetime :enqueued_at,          null: false
+      table.datetime :enqueued_at, null: false
       table.datetime :scheduled_at
     end
 
@@ -103,16 +103,23 @@ class TestDb
     raise 'connection already established' if @connected
 
     @connected = true
-    if ENV.fetch('DB', 'sqlite') == 'mysql'
+    db = ENV.fetch('DB', 'sqlite')
+    case db
+    when 'mysql'
       require 'mysql2'
       ActiveRecord::Base.establish_connection(
         adapter:  'mysql2', host: '127.0.0.1', username: 'root', password: 'root', database: 'arj'
       )
-    elsif ENV.fetch('DB', 'sqlite') == 'sqlite'
+    when 'postgresql', 'postgres', 'pg'
+      require 'pg'
+      ActiveRecord::Base.establish_connection(
+        adapter:  'postgresql', host: '127.0.0.1', username: 'root', password: 'root', database: 'arj'
+      )
+    when 'sqlite'
       require 'sqlite3'
       ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: FILE)
     else
-      raise "invalid database: #{ENV['DB']}"
+      raise "invalid database: #{db}"
     end
   end
 
@@ -122,16 +129,14 @@ class TestDb
   end
 
   def self.destroy
-    if @connected && ActiveRecord::Base.connection.table_exists?(:jobs)
-      ActiveRecord::Base.connection.drop_table(:jobs)
-    end
-    Dir.glob("#{FILE}*").each { |file| File.delete(file)}
+    ActiveRecord::Base.connection.drop_table(:jobs) if @connected && ActiveRecord::Base.connection.table_exists?(:jobs)
+    Dir.glob("#{FILE}*").each { |file| File.delete(file) }
     @connected = false
   end
 
   def self.reset
-    self.destroy
-    self.create
+    destroy
+    create
   end
 
   def self.clear
