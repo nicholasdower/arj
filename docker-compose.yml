@@ -1,0 +1,27 @@
+services:
+  arj_mysql:
+    container_name: arj_mysql
+    image: mysql/mysql-server:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./sql/my.cnf:/etc/mysql/my.cnf:ro
+      - ./logs/mysql-general.log:/var/log/mysql-general.log
+      - ./logs/mysql-error.log:/var/log/mysql-error.log
+    command: mysqld --general-log --general-log-file=/var/log/mysql-general.log --log-error=/var/log/mysql-error.log
+    healthcheck:
+      test: ['CMD', 'mysql', '--user=root', '--password=root', '--execute', 'show databases;']
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 10s
+  arj_mysql_healthy:
+    container_name: arj_mysql_healthy
+    command: 'true'
+    image: alpine
+    depends_on:
+      arj_mysql:
+        condition: service_healthy

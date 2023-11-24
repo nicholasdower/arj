@@ -2,7 +2,9 @@ AllCops:
   TargetRubyVersion: 2.7.0
   NewCops: enable
   Include:
+    - 'script/await-healthy-container'
     - 'script/console'
+    - 'script/docker-compose-up-detach'
     - 'script/watch'
     - 'spec/**/*.rb'
     - 'lib/**/*.rb'

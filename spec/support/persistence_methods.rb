@@ -83,7 +83,8 @@ shared_examples 'persistence methods' do |target_class|
   context "#{description}update!" do
     subject { target_class == Arj ? Arj.update_job!(job, attributes) : job.update!(attributes) }
 
-    let!(:job) { Arj::Test::Job.perform_later }
+    let!(:job) { Arj::Test::Job.perform_later(*arguments) }
+    let(:arguments) { [] }
     let(:attributes) { {} }
 
     context 'when attributes is not a hash' do
@@ -111,6 +112,23 @@ shared_examples 'persistence methods' do |target_class|
 
       it 'updates the database record' do
         expect { subject }.to change { Job.sole.queue_name }.from('default').to('some queue')
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
+      end
+    end
+
+    context 'when arguments attribute specified' do
+      let(:attributes) { { arguments: ['bar'] } }
+      let(:arguments) { ['foo'] }
+
+      it 'updates the job' do
+        expect { subject }.to change(job, :arguments).from(['foo']).to(['bar'])
+      end
+
+      it 'updates the database record' do
+        expect { subject }.to change { Job.sole.arguments }.from('["foo"]').to('["bar"]')
       end
 
       it 'returns true' do

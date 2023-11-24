@@ -5,7 +5,6 @@ require 'active_job/base'
 require 'active_record'
 require 'fileutils'
 require 'logger'
-require 'sqlite3'
 require 'tempfile'
 
 Dir.glob('lib/**/*.rb').each { |f| require "./#{f}" }
@@ -93,12 +92,28 @@ class TestDb
   FILE = '.test.db'
 
   def self.create
+    connect
+
+    ActiveRecord::Base.connection.drop_table(:jobs) if ActiveRecord::Base.connection.table_exists?(:jobs)
+
+    CreateJobs.migrate(:up)
+  end
+
+  def self.connect
     raise 'connection already established' if @connected
 
-    self.destroy
     @connected = true
-    ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: FILE)
-    CreateJobs.migrate(:up)
+    if ENV.fetch('DB', 'sqlite') == 'mysql'
+      require 'mysql2'
+      ActiveRecord::Base.establish_connection(
+        adapter:  'mysql2', host: '127.0.0.1', username: 'root', password: 'root', database: 'arj'
+      )
+    elsif ENV.fetch('DB', 'sqlite') == 'sqlite'
+      require 'sqlite3'
+      ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: FILE)
+    else
+      raise "invalid database: #{ENV['DB']}"
+    end
   end
 
   def self.migrate(migration, direction)
@@ -107,6 +122,9 @@ class TestDb
   end
 
   def self.destroy
+    if @connected && ActiveRecord::Base.connection.table_exists?(:jobs)
+      ActiveRecord::Base.connection.drop_table(:jobs)
+    end
     Dir.glob("#{FILE}*").each { |file| File.delete(file)}
     @connected = false
   end

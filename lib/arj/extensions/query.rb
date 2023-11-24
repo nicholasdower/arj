@@ -64,7 +64,7 @@ module Arj
         def method_missing(method, *args, &block)
           if method == :select
             # :select is also defined on Kernel. Using send will invoke the wrong method.
-            all.select(method, *args, &block)
+            all.select(*args, &block)
           else
             all.send(method, *args, &block)
           end

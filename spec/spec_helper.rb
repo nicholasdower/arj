@@ -15,7 +15,7 @@ Dir.glob('spec/support/**/*.rb').each { |f| require "./#{f}" }
 
 RSpec.configure do |config|
   config.before(:suite) do
-    TestDb.create
+    TestDb.reset
   end
 
   config.after(:suite) do

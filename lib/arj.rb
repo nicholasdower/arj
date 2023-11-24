@@ -169,9 +169,14 @@ module Arj
 
       job_data = Arj.job_data(record)
 
-      # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
-      job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
       job.deserialize(job_data)
+
+      # ActiveJob deserializes arguments on demand when a job is performed. Until then they are empty. That's strange.
+      # Instead, deserialize them now. Also, clear `serialized_arguments` to prevent ActiveJob from overwriting changes
+      # to arguments when serializing later.
+      job.arguments = ActiveJob::Arguments.deserialize(job_data['arguments'])
+      job.serialized_arguments = nil
+
       job.successfully_enqueued = !job.enqueued_at.nil?
 
       job

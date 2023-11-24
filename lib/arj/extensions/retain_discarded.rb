@@ -54,7 +54,7 @@ module Arj
       # @return [NilClass]
       def self.migrate_up(migration, table_name: :jobs)
         migration.add_column table_name, :discarded_at, :datetime
-        migration.change_column table_name, :enqueued_at, :datetime
+        migration.change_column table_name, :enqueued_at, :datetime, null: true
       end
 
       # Removes the +discarded_at+ column from the jobs table.

@@ -305,7 +305,10 @@ describe Arj::Extensions::RetainDiscarded do
       subject { Arj.discarded.to_a }
 
       it 'raises' do
-        expect { subject }.to raise_error(ActiveRecord::StatementInvalid, /no such column: discarded_at/)
+        expect { subject }.to raise_error(
+          ActiveRecord::StatementInvalid,
+          /(no such column: discarded_at|Mysql2::Error: Unknown column 'discarded_at')/
+        )
       end
     end
   end

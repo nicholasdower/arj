@@ -46,8 +46,7 @@ describe Arj::Extensions::Query do
 
       it 'returns the jobs' do
         expect(subject.to_a.size).to eq(2)
-        expect(subject.to_a.first.queue_name).to eq('one')
-        expect(subject.to_a.second.queue_name).to eq('two')
+        expect(subject.to_a.map(&:queue_name)).to contain_exactly('one', 'two')
       end
     end
   end
@@ -85,8 +84,7 @@ describe Arj::Extensions::Query do
 
       it 'returns the jobs' do
         expect(subject.to_a.size).to eq(2)
-        expect(subject.to_a.first.queue_name).to eq('one')
-        expect(subject.to_a.second.queue_name).to eq('two')
+        expect(subject.to_a.map(&:queue_name)).to contain_exactly('one', 'two')
       end
     end
   end
@@ -100,7 +98,7 @@ describe Arj::Extensions::Query do
     end
 
     it 'returns the plucked values' do
-      expect(subject).to eq(%w[one two])
+      expect(subject.sort).to eq(%w[one two])
     end
   end
 

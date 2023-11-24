@@ -16,8 +16,8 @@ on:
       - '!/.github/workflows/release.yml'
 
 jobs:
-  test-2-7-0:
-    name: Build, Lint & Test (2.7.0)
+  build-lint-test-2-7-0-sqlite:
+    name: Build, Lint & Test (2.7.0, SQLite)
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
@@ -25,11 +25,12 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '2.7.0'
-      - run: bundle install
-      - run: bundle exec rubocop
-      - run: bundle exec rspec
-  test-3-2-2:
-    name: Build, Lint & Test (3.2.2)
+      - name: Lint
+        run: make rubocop
+      - name: Test
+        run: make rspec
+  build-lint-test-3-2-2-sqlite:
+    name: Build, Lint & Test (3.2.2, SQLite)
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
@@ -37,6 +38,18 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2.2'
-      - run: bundle install
-      - run: bundle exec rubocop
-      - run: bundle exec rspec
+      - name: Lint
+        run: make rubocop
+      - name: Test
+        run: make rspec
+  test-3-2-2-mysql:
+    name: Test (3.2.2, MySQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2.2'
+      - name: Test
+        run: make rspec-mysql

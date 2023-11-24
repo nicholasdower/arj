@@ -34,4 +34,6 @@ Add Workers for other cases, sharded worker, workers that know about discarded_a
 Fix ActiveRecord::Relation doc links.
 Proxy all Arj methods to Job, only wrap if the result is a relation. Same for Query module.
 Make including extensions use a method rather than naming each module.
-
+Why does the console print already initialized? What are we loading twice?
+Handle worker interrupts
+Allow switching from mysql to sqlite during tests/console
